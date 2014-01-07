@@ -1,5 +1,5 @@
 library("PerformanceAnalytics")
-library("CompStrat")
+library("PeerPerformance")
 data(managers)
 x = managers[,1]
 y = managers[,2]

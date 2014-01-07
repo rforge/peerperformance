@@ -1,19 +1,19 @@
-if(!exists("meta") || is.null(meta)) meta <- packageDescription("CompStrat")
+if(!exists("meta") || is.null(meta)) meta <- packageDescription("PeerPerformance")
 year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", meta$Date)
 vers <- paste("version", meta$Version)
 
-citHeader("To cite 'CompStrat' in publications use:")
+citHeader("To cite 'PeerPerformance' in publications use:")
 
 citEntry(entry = "manual",
-	 title = "{CompStrat}: Comparing Investment Strategies in {R}",
+	 title = "{PeerPerformance}: Peer performance analysis in {R}",
 	 author = personList(person("Kris","Boudt"),
                              person("Ardia","David")),
          year = year,
 	 note = vers,
-	 url = "http://CRAN.R-project.org/package=CompStrat",
+	 url = "http://CRAN.R-project.org/package=PeerPerformance",
 	 textVersion =
          paste("Kris Boudt, Ardia David (", year,"). ",
-               "'CompStrat': Comparing Strategies in 'R'. ", vers, ".", sep = "")
+               "'PeerPerformance': Peer performance analysis in 'R'. ", vers, ".", sep = "")
 )
 
 citEntry(entry = "misc",
