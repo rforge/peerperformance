@@ -1,0 +1,28 @@
+if(!exists("meta") || is.null(meta)) meta <- packageDescription("CompStrat")
+year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", meta$Date)
+vers <- paste("version", meta$Version)
+
+citHeader("To cite 'CompStrat' in publications use:")
+
+citEntry(entry = "manual",
+	 title = "{CompStrat}: Comparing Investment Strategies in {R}",
+	 author = personList(person("Kris","Boudt"),
+                             person("Ardia","David")),
+         year = year,
+	 note = vers,
+	 url = "http://CRAN.R-project.org/package=CompStrat",
+	 textVersion =
+         paste("Kris Boudt, Ardia David (", year,"). ",
+               "'CompStrat': Comparing Strategies in 'R'. ", vers, ".", sep = "")
+)
+
+citEntry(entry = "misc",
+	 title = "The Peer Performance of Hedge Funds",
+	 author = personList(person("David","Ardia"),
+                             person("Kris","Boudt")),
+         year = "2012",
+         url = "http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2000901",
+	 textVersion =
+         paste("David Ardia, Kris Boudt (2012).",
+               "The Peer Performance of Hedge Funds.")
+)
