@@ -40,7 +40,7 @@
    The optimal block length.
 }
 \note{%
-  Please cite the package in publications. Use \code{citation("CompStrat")}.
+  Please cite the package in publications. Use \code{citation("PeerPerformance")}.
 }
 \author{%
   David Ardia and Kris Boudt.

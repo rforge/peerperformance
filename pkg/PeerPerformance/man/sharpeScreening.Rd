@@ -78,7 +78,7 @@ sharpeScreening(X, control = list())
   Application of the false discovery rate approach applied to the mutual fund industry has been presented in 
   Barraz, Scaillet and Wermers (2010). 
 
-  Please cite the package in publications. Use \code{citation("CompStrat")}.
+  Please cite the package in publications. Use \code{citation("PeerPerformance")}.
 }
 \author{%
   David Ardia and Kris Boudt.

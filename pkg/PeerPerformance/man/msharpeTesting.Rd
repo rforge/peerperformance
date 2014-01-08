@@ -57,7 +57,7 @@
 
   Some internal functions where adapted from Wolf's R code.
 
-  Please cite the package in publications. Use \code{citation("CompStrat")}.
+  Please cite the package in publications. Use \code{citation("PeerPerformance")}.
 }
 \author{%
   David Ardia and Kris Boudt.

@@ -72,7 +72,7 @@
   Currently, the hac asymptotic and studentized circular block bootstrap presented in Ledoit and Wolf (2008) are not supported by
   the \code{alphaScreening} function.
 
-  Please cite the package in publications. Use \code{citation("CompStrat")}.
+  Please cite the package in publications. Use \code{citation("PeerPerformance")}.
 }
 \author{%
   David Ardia and Kris Boudt.

@@ -20,7 +20,7 @@
   A scalar or a vector (of size \eqn{N}) with the Sharpe ratios.
 }
 \note{%
-  Please cite the package in publications. Use \code{citation("CompStrat")}.
+  Please cite the package in publications. Use \code{citation("PeerPerformance")}.
 }
 \author{%
   David Ardia and Kris Boudt.
