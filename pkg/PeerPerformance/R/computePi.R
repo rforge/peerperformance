@@ -20,7 +20,7 @@
     lambda = rep(lambda, m)
   }
   
-  pizero = pipo = pineg = lambda_ = rep(NA, m)
+  pizero = pipos = pineg = lambda_ = rep(NA, m)
   for (i in 1 : m){
     pvali = pval[i,]
     if (all(is.na(pvali))){
@@ -62,6 +62,7 @@
   out = list(pizero = pizero, pipos = pipos, pineg = pineg, lambda = lambda_)
   return(out)
 }
+computePi = cmpfun(.computePi)
 
 ####################################################################################
 # Given a value of lambda, this function returns the pizero of the funds
@@ -72,15 +73,15 @@
     pval = matrix(pval, nrow = 1)
   }
   
-  n1 = nrow(pval)
-  n2 = ncol(pval)
-  mlambda = matrix(lambda, n1, n2, byrow = FALSE)
+  m = nrow(pval)
+  n = ncol(pval)
+  mlambda = matrix(lambda, m, n, byrow = FALSE)
   
   pizero = rowMeans(pval >= mlambda, na.rm = TRUE)
   pizero = pizero * (1 / (1 - lambda))
   pizero[pizero > 1] = 1
   # adjust pi using truncated binomial Monte Carlo quadratic fit
-  pizero = adjustPi(pizero, n = n1-1, lambda = lambda)
+  pizero = adjustPi(pizero, n = n, lambda = lambda)
   
   return(pizero)
 }
@@ -111,7 +112,7 @@ computePizero = cmpfun(.computePizero)
     nlambda = npi0 * (1 - lambda)
     s2 = nlambda * (n - nlambda) / (n^3 * (1 - lambda)^2)
     s = sqrt(s2)
-    zcrit = (1 - pi0) / s
+    zcrit = (1 - pi.hat) / s
     out = pi.hat + s * (-dnorm(zcrit) + (1 - pnorm(zcrit)) * zcrit)
   }
   
@@ -192,7 +193,7 @@ createArrayCoefAdjustPi = cmpfun(.createArrayCoefAdjustPi)
   }
   fit  = lm(pi0 ~ 1 + pi0.biased + I(pi0.biased^2))
   coef = as.numeric(fit$coef)
-  out  = list(coef = coef, pi0 = pi0, pi0.unbiased = pi0.unbiased, pi0.biased = pi0.biased
+  out  = list(coef = coef, pi0 = pi0, pi0.unbiased = pi0.unbiased, pi0.biased = pi0.biased,
               n = n, lambda = lambda, npi0 = npi0, M = M)
   return(out)
 }
