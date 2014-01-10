@@ -6,71 +6,71 @@
 # Given a value of lambda, this function returns the pi0, pi+ and pi- of the funds
 ####################################################################################
 
-# pval is N x N, where N is the number of funds
-# if we want to estimate pi for a single fund, we need to provide pval as a 1 x N matrix
-
-computePi = function (pval, dalpha, lambda, nBoot){
+.computePi = function(pval, dalpha, lambda = 0.5, nBoot = 500, bpos = 0.4, bneg = 0.6){
+  if (!is.matrix(pval)){
+    pval = matrix(pval, nrow = 1)
+  }
+  if (!is.matrix(dalpha)){
+    dalpha = matrix(dalpha, nrow = 1)
+  }
   
-  # remove full NA
-  ntot = nrow(pval)
-  pos.na = which(apply(is.na(pval), 1, all))
-  pos.ok = (1:ntot)
-  npos.na = length(pos.na)
-  if (npos.na > 0) {
-    pos.ok = pos.ok[-pos.na]
-    pval = pval[-pos.na, -pos.na]
-    dalpha = dalpha[-pos.na, -pos.na]
-    if (!is.null(lambda)) {
-      lambda = lambda[-pos.na]
+  m = nrow(pval)
+  n1 = ncol(pval) # n + 1 funds
+  if (length(lambda) == 1){
+    lambda = rep(lambda, m)
+  }
+  
+  pizero = pipo = pineg = lambda_ = rep(NA, m)
+  for (i in 1 : m){
+    pvali = pval[i,]
+    if (all(is.na(pvali))){
+      next  
     }
+    dalphai = dalpha[i,]
+    if (is.null(lambda)){
+      lambdai = computeOptLambda(pval = pvali, nBoot = nBoot)
+    }
+    else{
+      lambdai = lambda[i]
+    }
+    
+    pizeroi = computePizero(pvali, lambdai)
+    idxOK = !is.na(pvali) & !is.na(dalphai)
+    n = sum(idxOK) # number of peers
+    if (n <= 1){
+      next
+    }
+    dalphai = dalphai[idxOK]
+    ni0 = pizeroi * n
+    hn  = round(0.5 * n)
+    if (sum(dalphai >= 0) >= hn){
+      qpos   = quantile(dalphai, p = bpos)
+      piposi = (1 / n) * max(sum(dalphai >= qpos) - ni0 * (1 - bpos), 0)
+      pinegi = 1 - pizeroi - piposi
+    }
+    else{
+      qneg = quantile(dalphai, p = bneg)
+      pinegi = (1 / n) * max(sum(dalphai <= qneg) - ni0 * bneg, 0)
+      piposi = 1 - pizeroi - pinegi 
+    }
+    pizero[i]  = pizeroi
+    pipos[i]   = piposi
+    pineg[i]   = pinegi
+    lambda_[i] = lambdai
   }
-  if (is.null(lambda)) {
-    lambda = PeerPerformance:::computeOptLambda(pval = pval, nBoot = nBoot)
-  }
-  pizero = PeerPerformance:::computePizero(pval, lambda)
-  n1  = ncol(pval)
-  n   = max(n1 - 1, 1)
-  ni0 = pizero * n
-  pipos = pineg = rep(0, nrow(pval))
-  idx = (0 <= pizero) & (pizero < 1)
-  pipos[idx] = ((1/n) * (rowSums(dalpha >= 0, na.rm = TRUE) - 0.5 * ni0))[idx]
-  pineg[idx] = ((1/n) * (rowSums(dalpha < 0, na.rm = TRUE) - 0.5 * ni0))[idx]
-  idx = pizero == 0
-  pipos[idx & apply(dalpha >= 0, 1, all, na.rm = TRUE)] = 1
-  pineg[idx & apply(dalpha < 0, 1, all, na.rm = TRUE)]  = 1
-  idx = pipos < 0
-  pipos[idx] = 0
-  pineg[idx] = 1 - pizero[idx]
-  idx = pineg < 0
-  pineg[idx] = 0
-  pipos[idx] = 1 - pizero[idx]
-  idx = pipos > 1
-  pipos[idx] = 1 - pizero[idx]
-  pineg[idx] = 0
-  idx = pineg > 1
-  pineg[idx] = 1 - pizero[idx]
-  pipos[idx] = 0
-  # check if a delta is remaining
-  delta = pizero + pipos + pineg - 1
-  pipos = pipos - (delta/2)
-  pineg = pineg - (delta/2)
-  # internal assignation
-  pizero_ = pipos_ = pineg_ = lambda_ = rep(NA, ntot)
-  pizero_[pos.ok] = pizero
-  pipos_[pos.ok] = pipos
-  pineg_[pos.ok] = pineg
-  lambda_[pos.ok] = lambda
-  out = list(pizero = pizero_, pipos = pipos_, pineg = pineg_, 
-             lambda = lambda_)
-  return(out)
   
+  out = list(pizero = pizero, pipos = pipos, pineg = pineg, lambda = lambda_)
+  return(out)
 }
 
 ####################################################################################
 # Given a value of lambda, this function returns the pizero of the funds
 ####################################################################################
 
-computePizero = function(pval, lambda){
+.computePizero = function(pval, lambda = 0.5){
+  if (!is.matrix(pval)){
+    pval = matrix(pval, nrow = 1)
+  }
   
   n1 = nrow(pval)
   n2 = ncol(pval)
@@ -79,15 +79,133 @@ computePizero = function(pval, lambda){
   pizero = rowMeans(pval >= mlambda, na.rm = TRUE)
   pizero = pizero * (1 / (1 - lambda))
   pizero[pizero > 1] = 1
+  # adjust pi using truncated binomial Monte Carlo quadratic fit
+  pizero = adjustPi(pizero, n = n1-1, lambda = lambda)
   
   return(pizero)
 }
+computePizero = cmpfun(.computePizero)
+
+####################################################################################
+# Adjust estimated pi0 using quadratif fit
+####################################################################################
+
+.adjustPi = function(pi.hat, n = 100, lambda = 0.5, type = c("simulation", "asymptotic")){
+  m = length(pi.hat)
+  if (length(n) == 1){
+    n = rep.int(n, m)
+  }
+  if (length(lambda) == 1){
+    lambda = rep.int(lambda, m)
+  }
+  
+  out = vector('double', m)
+  if (type[1] == "simulation"){
+    for (i in 1 : m){
+      coef   = coefAdjustPi(n[i], lambda[i])
+      out[i] = coef[1] + coef[2] * pi.hat[i] + coef[3] * pi.hat[i]^2
+    }
+  }
+  if (type[1] == "asymptotic"){
+    npi0 = pi.hat * n
+    nlambda = npi0 * (1 - lambda)
+    s2 = nlambda * (n - nlambda) / (n^3 * (1 - lambda)^2)
+    s = sqrt(s2)
+    zcrit = (1 - pi0) / s
+    out = pi.hat + s * (-dnorm(zcrit) + (1 - pnorm(zcrit)) * zcrit)
+  }
+  
+  idx  = pi.hat < 0.85
+  out[idx] = pi.hat[idx]
+  out[is.nan(out) | out < 0] = 0
+  out[out > 1] = 1
+  return(out)
+}
+adjustPi = cmpfun(.adjustPi)
+
+.coefAdjustPi = function(n, lambda){
+  ids = matrix(data = c(10,0.3,10,0.4,10,0.5,10,0.6,10,0.7,50,0.3,50,0.4,50,0.5,50,0.6,50,0.7,100,0.3,100,
+                        0.4,100,0.5,100,0.6,100,0.7,500,0.3,500,0.4,500,0.5,500,0.6,500,0.7,1000,0.3,
+                        1000,0.4,1000,0.5,1000,0.6,1000,0.7), 
+               nrow = 25, ncol = 2, byrow = TRUE)
+  coef = matrix(data = c(12.4264397055725,-28.8462924603265,18.0061745439696,2.22784959599922,-4.33794978760025,
+                         3.33846783477142,-3.5062288124517,9.94411690220581,-5.50860579817955,-9.59063438888672,
+                         25.9944774753484,-16.0243234516758,-9.50704513388566,26.8509583669393,-17.2326763276237,
+                         2.69973475372684,-5.18728038928751,3.56020419106916,2.90584925091467,-5.75369084260271,
+                         3.94462528611671,3.10498649240963,-6.32430459839148,4.34712083046976,3.10341843532753,
+                         -6.459248111501,4.5207017397825,3.3201246167253,-7.13256919772734,5.03730846454779,
+                         1.92615117037718,-3.36988186562355,2.48393491184823,2.23024137854889,-4.11257781958698,
+                         2.93730040964901,2.53451778338116,-4.8778475515017,3.41778177692686,2.8712983587036,
+                         -5.72958870731188,3.95833690647981,2.65060599304652,-5.37075396882709,3.85060868153408,
+                         0.782769992193963,-0.743978244550511,0.971372543293702,1.06310054658503,-1.37802062179133,
+                         1.32960965871391,1.34679398014843,-2.02732476869674,1.7009379767174,1.79031480628225,
+                         -3.03536712430862,2.27395681782583,2.14237527425761,-3.87093079288463,2.76951593594632,
+                         0.430884461964093,0.0411279494749582,0.533315651199973,0.659038682749762,-0.467637536214552,
+                         0.816502791444037,0.902316149838157,-1.01323439030704,1.12219969436304,1.18316263219461,
+                         -1.64749879388121,1.48017617185269,1.52276073392502,-2.4266177990621,1.92694731845667), 
+                nrow = 25, ncol = 3, byrow = TRUE)
+  absn      = abs(n - ids[,1])
+  abslambda = abs(lambda - ids[,2])
+  idx  = (absn == min(absn)) & abslambda == min(abslambda)
+  coef = coef[which(idx),]
+  return(coef)
+}
+coefAdjustPi = cmpfun(.coefAdjustPi)
+
+.createArrayCoefAdjustPi = function(npi0 = 100, M = 1000){
+  n = c(10, 50, 100, 500, 1000)
+  lambda = seq(0.3, 0.7, 0.1)
+  n1 = length(n)
+  n2 = length(lambda)
+  ids  = matrix(data = NA, nrow = n1 * n2, ncol = 2) 
+  coef = matrix(data = NA, nrow = n1 * n2, ncol = 3)
+  k = 1
+  for (i in 1 : n1){
+    for (j in 1 : n2){
+      tmp = computeCoefAdjustPi(n = n[i], lambda = lambda[j], npi0 = npi0, M = M)
+      ids[k,]  = c(n[i], lambda[j])
+      coef[k,] = tmp$coef  
+      k = k + 1
+    }
+  }
+  out = list(ids = ids, coef = coef)
+  return(out)
+}
+createArrayCoefAdjustPi = cmpfun(.createArrayCoefAdjustPi)
+
+.computeCoefAdjustPi = function(n = 100, lambda = 0.5, npi0 = 100, M = 1000){
+  # true pi0 mesh
+  lb = 0.85
+  ub = 0.999
+  pi0 = seq(from = lb, to = ub, length.out = npi0)
+  npi0 = length(pi0)
+  pi0.unbiased = pi0.biased = vector('double', npi0)
+  for (i in 1 : npi0){
+    n0   = floor(pi0[i] * n)
+    # Monte Carlo estimation of pi0
+    pval = matrix(data = 0, nrow = M, ncol = n)
+    pval[1:M,1:n0] = runif(n = M * n0, min = 0, max = 1)  
+    tmp = rowSums(pval >= lambda) / (1 - lambda)
+    pi0.unbiased[i] = mean(tmp) / n
+    tmp[tmp > n] = n
+    pi0.biased[i] = mean(tmp) / n
+  }
+  fit  = lm(pi0 ~ 1 + pi0.biased + I(pi0.biased^2))
+  coef = as.numeric(fit$coef)
+  out  = list(coef = coef, pi0 = pi0, pi0.unbiased = pi0.unbiased, pi0.biased = pi0.biased
+              n = n, lambda = lambda, npi0 = npi0, M = M)
+  return(out)
+}
+computeCoefAdjustPi = cmpfun(.computeCoefAdjustPi)
 
 ####################################################################################
 # Compute optimal lamba values 
 ####################################################################################
 
-.computeOptLambda = function(pval, nBoot){
+.computeOptLambda = function(pval, nBoot = 500){
+  if (!is.matrix(pval)){
+    pval = matrix(pval, nrow = 1)
+  }
   
   n = nrow(pval) # number of funds
   
