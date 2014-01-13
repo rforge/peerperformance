@@ -28,7 +28,7 @@
     }
     dalphai = dalpha[i,]
     if (is.null(lambda)){
-      lambdai = computeOptLambda(pval = pvali, nBoot = nBoot, adjust = FALSE)
+      lambdai = computeOptLambda(pval = pvali, nBoot = nBoot, adjust = adjust)
     }
     else{
       lambdai = lambda[i]
@@ -46,18 +46,15 @@
     piposi = pinegi = 0
     
     idxOKnPizeroi = idxOK & pvali >= lambdai
-    qpos = qneg = 0
-    if (sum(idxOKnPizeroi) >= 1){
-      qpos = quantile(dalphai[idxOKnPizeroi], p = bpos)
-      qneg = quantile(dalphai[idxOKnPizeroi], p = bneg)
-    }
+    qpos = qnorm(p = bpos)
+    qneg = qnorm(p = bneg)
     
     if (sum(dalphai[idxOK] >= 0) >= hn){
-      piposi = min((1 / n) * max(sum(dalphai[idxOK] >= qpos) - ni0 * (1 - bpos), 0), 1 - pizeroi)
+      piposi = (1 / n) * min((n - ni0), max(sum(dalphai[idxOK] >= qpos) - ni0 * (1 - bpos), 0))
       pinegi = 1 - pizeroi - piposi
     }
     else{
-      pinegi = min((1 / n) * max(sum(dalphai[idxOK] <= qneg) - ni0 * bneg, 0), 1 - pizeroi)
+      pinegi = (1 / n) * min((n - ni0), max(sum(dalphai[idxOK] <= qneg) - ni0 * bneg, 0))
       piposi = 1 - pizeroi - pinegi
     }
     
