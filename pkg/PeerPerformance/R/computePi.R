@@ -6,7 +6,7 @@
 # Given a value of lambda, this function returns the pi0, pi+ and pi- of the funds
 ####################################################################################
 
-.computePi = function(pval, dalpha, lambda = 0.5, nBoot = 500, bpos = 0.4, bneg = 0.6){
+.computePi = function(pval, dalpha, lambda = 0.5, nBoot = 500, bpos = 0.4, bneg = 0.6, adjust = TRUE){
   if (!is.matrix(pval)){
     pval = matrix(pval, nrow = 1)
   }
@@ -28,31 +28,39 @@
     }
     dalphai = dalpha[i,]
     if (is.null(lambda)){
-      lambdai = computeOptLambda(pval = pvali, nBoot = nBoot)
+      lambdai = computeOptLambda(pval = pvali, nBoot = nBoot, adjust = FALSE)
     }
     else{
       lambdai = lambda[i]
     }
     
-    pizeroi = computePizero(pvali, lambdai)
+    pizeroi = computePizero(pvali, lambda = lambdai, adjust = adjust)
     idxOK = !is.na(pvali) & !is.na(dalphai)
     n = sum(idxOK) # number of peers
     if (n <= 1){
       next
     }
-    dalphai = dalphai[idxOK]
+    
     ni0 = pizeroi * n
     hn  = round(0.5 * n)
-    if (sum(dalphai >= 0) >= hn){
-      qpos   = quantile(dalphai, p = bpos)
-      piposi = (1 / n) * max(sum(dalphai >= qpos) - ni0 * (1 - bpos), 0)
+    piposi = pinegi = 0
+    
+    idxOKnPizeroi = idxOK & pvali >= lambdai
+    qpos = qneg = 0
+    if (sum(idxOKnPizeroi) >= 1){
+      qpos = quantile(dalphai[idxOKnPizeroi], p = bpos)
+      qneg = quantile(dalphai[idxOKnPizeroi], p = bneg)
+    }
+    
+    if (sum(dalphai[idxOK] >= 0) >= hn){
+      piposi = min((1 / n) * max(sum(dalphai[idxOK] >= qpos) - ni0 * (1 - bpos), 0), 1 - pizeroi)
       pinegi = 1 - pizeroi - piposi
     }
     else{
-      qneg = quantile(dalphai, p = bneg)
-      pinegi = (1 / n) * max(sum(dalphai <= qneg) - ni0 * bneg, 0)
-      piposi = 1 - pizeroi - pinegi 
+      pinegi = min((1 / n) * max(sum(dalphai[idxOK] <= qneg) - ni0 * bneg, 0), 1 - pizeroi)
+      piposi = 1 - pizeroi - pinegi
     }
+    
     pizero[i]  = pizeroi
     pipos[i]   = piposi
     pineg[i]   = pinegi
@@ -68,7 +76,7 @@ computePi = cmpfun(.computePi)
 # Given a value of lambda, this function returns the pizero of the funds
 ####################################################################################
 
-.computePizero = function(pval, lambda = 0.5){
+.computePizero = function(pval, lambda = 0.5, adjust = FALSE){
   if (!is.matrix(pval)){
     pval = matrix(pval, nrow = 1)
   }
@@ -80,8 +88,10 @@ computePi = cmpfun(.computePi)
   pizero = rowMeans(pval >= mlambda, na.rm = TRUE)
   pizero = pizero * (1 / (1 - lambda))
   pizero[pizero > 1] = 1
-  # adjust pi using truncated binomial Monte Carlo quadratic fit
-  pizero = adjustPi(pizero, n = n, lambda = lambda)
+  # adjust pi using truncated binomial
+  if (adjust){
+    pizero = adjustPi(pizero, n = n, lambda = lambda) 
+  }
   
   return(pizero)
 }
@@ -203,7 +213,7 @@ computeCoefAdjustPi = cmpfun(.computeCoefAdjustPi)
 # Compute optimal lamba values 
 ####################################################################################
 
-.computeOptLambda = function(pval, nBoot = 500){
+.computeOptLambda = function(pval, nBoot = 500, adjust = TRUE){
   if (!is.matrix(pval)){
     pval = matrix(pval, nrow = 1)
   }
@@ -215,7 +225,7 @@ computeCoefAdjustPi = cmpfun(.computeCoefAdjustPi)
   
   mpizero = matrix(data = NA, nrow = n, ncol = nvlambda)
   for (i in 1 : nvlambda){
-    mpizero[,i] = computePizero(pval, vlambda[i])
+    mpizero[,i] = computePizero(pval, lambda = vlambda[i], adjust = adjust)
   }
   # pi0hat
   vminpizero = apply(mpizero, 1, 'min')
@@ -235,7 +245,7 @@ computeCoefAdjustPi = cmpfun(.computeCoefAdjustPi)
       
       mpizerob = matrix(data = NA, nrow = nBoot, ncol = nvlambda)
       for (j in 1 : nvlambda){
-        mpizerob[,j] = computePizero(pvalb, vlambda[j])
+        mpizerob[,j] = computePizero(pvalb, lambda = vlambda[j], adjust = adjust)
       }
       
       vMSE = colSums((mpizerob - vminpizero[i])^2)
