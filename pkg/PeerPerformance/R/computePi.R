@@ -73,7 +73,7 @@ computePi = cmpfun(.computePi)
 # Given a value of lambda, this function returns the pizero of the funds
 ####################################################################################
 
-.computePizero = function(pval, lambda = 0.5, adjust = FALSE){
+.computePizero = function(pval, lambda = 0.5, adjust = TRUE){
   if (!is.matrix(pval)){
     pval = matrix(pval, nrow = 1)
   }
@@ -98,7 +98,7 @@ computePizero = cmpfun(.computePizero)
 # Adjust estimated pi0 using quadratif fit
 ####################################################################################
 
-.adjustPi = function(pi.hat, n = 100, lambda = 0.5, type = c("simulation", "asymptotic")){
+.adjustPi = function(pi.hat, n = 100, lambda = 0.5, type = c("asymptotic", "simulation")){
   m = length(pi.hat)
   if (length(n) == 1){
     n = rep.int(n, m)
@@ -107,24 +107,42 @@ computePizero = cmpfun(.computePizero)
     lambda = rep.int(lambda, m)
   }
   
+  asym.hatpi0 = function(pi0){
+    npi0 = pi0 * n
+    nlambda = npi0 * (1 - lambda)
+    s2 = nlambda*(n - nlambda) / (n^3 * (1 - lambda)^2)
+    s  = sqrt(s2)
+    zcrit  = (1 - pi0) / s
+    hatpi0 = pi0 + s * (-dnorm(zcrit) + (1 - pnorm(zcrit)) * zcrit)
+    return(hatpi0)
+  }
+  
+  asym.inverse = function(f, lower = -100, upper = 100){
+    FUN = function (y) uniroot((function (x) f(x) - y), lower = lower, upper = upper)$root
+    return(FUN)
+  }
+  
+  asym.invpi0 = asym.inverse(asym.hatpi0, lower = 0.00001, upper = 1.5)
+  
   out = vector('double', m)
+  if (type[1] == "asymptotic"){
+    for (i in 1 : m){
+      if (pi.hat[i] > 0.9999 | pi.hat[i] < 0.001){
+        out[i] = pi.hat[i]
+      }
+      else{
+        out[i] = asym.invpi0(pi.hat[i])
+      }
+    }
+  }
   if (type[1] == "simulation"){
     for (i in 1 : m){
       coef   = coefAdjustPi(n[i], lambda[i])
       out[i] = coef[1] + coef[2] * pi.hat[i] + coef[3] * pi.hat[i]^2
     }
+    idx  = pi.hat < 0.85
+    out[idx] = pi.hat[idx]
   }
-  if (type[1] == "asymptotic"){
-    npi0 = pi.hat * n
-    nlambda = npi0 * (1 - lambda)
-    s2 = nlambda * (n - nlambda) / (n^3 * (1 - lambda)^2)
-    s = sqrt(s2)
-    zcrit = (1 - pi.hat) / s
-    out = pi.hat + s * (-dnorm(zcrit) + (1 - pnorm(zcrit)) * zcrit)
-  }
-  
-  idx  = pi.hat < 0.85
-  out[idx] = pi.hat[idx]
   out[is.nan(out) | out < 0] = 0
   out[out > 1] = 1
   return(out)
