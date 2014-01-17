@@ -51,11 +51,11 @@
     
     if (sum(dalphai[idxOK] >= 0) >= hn){
       piposi = (1 / n) * min((n - ni0), max(sum(dalphai[idxOK] >= qpos) - ni0 * (1 - bpos), 0))
-      pinegi = 1 - pizeroi - piposi
+      pinegi = min(max(1 - pizeroi - piposi, 0), 1) # numerical stability
     }
     else{
       pinegi = (1 / n) * min((n - ni0), max(sum(dalphai[idxOK] <= qneg) - ni0 * bneg, 0))
-      piposi = 1 - pizeroi - pinegi
+      piposi =  min(max(1 - pizeroi - pinegi, 0), 1) # numerical stability
     }
     
     pizero[i]  = pizeroi
@@ -77,17 +77,14 @@ computePi = cmpfun(.computePi)
   if (!is.matrix(pval)){
     pval = matrix(pval, nrow = 1)
   }
-  
-  m = nrow(pval)
-  n = ncol(pval)
-  mlambda = matrix(lambda, m, n, byrow = FALSE)
-  
-  pizero = rowMeans(pval >= mlambda, na.rm = TRUE)
+
+  n = ncol(pval)  
+  pizero = mean(pval >= lambda, na.rm = TRUE)
   pizero = pizero * (1 / (1 - lambda))
   pizero[pizero > 1] = 1
   # adjust pi using truncated binomial
   if (adjust){
-    pizero = adjustPi(pizero, n = n, lambda = lambda) 
+    pizero = adjustPi(pizero, n = n, lambda = lambda)
   }
   
   return(pizero)
@@ -99,37 +96,21 @@ computePizero = cmpfun(.computePizero)
 ####################################################################################
 
 .adjustPi = function(pi.hat, n = 100, lambda = 0.5, type = c("asymptotic", "simulation")){
-  m = length(pi.hat)
-  if (length(n) == 1){
-    n = rep.int(n, m)
-  }
-  if (length(lambda) == 1){
-    lambda = rep.int(lambda, m)
-  }
   
-  #asym.hatpi0 = function(pi0){
-  #  npi0 = pi0 * n
-  #  nlambda = npi0 * (1 - lambda)
-  #  s2 = nlambda*(n - nlambda) / (n^3 * (1 - lambda)^2)
-  #  s  = sqrt(s2)
-  #  zcrit  = (1 - pi0) / s
-  #  hatpi0 = pi0 + s * (-dnorm(zcrit) + (1 - pnorm(zcrit)) * zcrit)
-  #  return(hatpi0)
-  #}
   asym.hatpi0 = function(pi0){
     npi0 = pi0 * n
     nlambda = npi0 * (1 - lambda)
-    if(nlambda>=n){
+    if (nlambda >= n){
       hatpi0 = pi0
-    }else{
-      s2 = nlambda*(n - nlambda) / (n^3 * (1 - lambda)^2)
+    }
+    else{
+      s2 = nlambda * (n - nlambda) / (n^3 * (1 - lambda)^2)
       s  = sqrt(s2)
       zcrit  = (1 - pi0) / s
       hatpi0 = pi0 + s * (-dnorm(zcrit) + (1 - pnorm(zcrit)) * zcrit)
     }
     return(hatpi0)
   }
-  
   
   asym.inverse = function(f, lower = -100, upper = 100){
     FUN = function (y) uniroot((function (x) f(x) - y), lower = lower, upper = upper)$root
@@ -138,10 +119,11 @@ computePizero = cmpfun(.computePizero)
   
   asym.invpi0 = asym.inverse(asym.hatpi0, lower = 0.00001, upper = 1.5)
   
+  m = length(pi.hat)
   out = vector('double', m)
   if (type[1] == "asymptotic"){
     for (i in 1 : m){
-      if (pi.hat[i] > 0.9999 | pi.hat[i] < 0.001){
+      if (pi.hat[i] > 0.99 | pi.hat[i] < 0.01){
         out[i] = pi.hat[i]
       }
       else{
@@ -150,6 +132,12 @@ computePizero = cmpfun(.computePizero)
     }
   }
   if (type[1] == "simulation"){
+    if (length(n) == 1){
+      n = rep.int(n, m)
+    }
+    if (length(lambda) == 1){
+      lambda = rep.int(lambda, m)
+    }
     for (i in 1 : m){
       coef   = coefAdjustPi(n[i], lambda[i])
       out[i] = coef[1] + coef[2] * pi.hat[i] + coef[3] * pi.hat[i]^2
