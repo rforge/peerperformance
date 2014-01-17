@@ -107,15 +107,29 @@ computePizero = cmpfun(.computePizero)
     lambda = rep.int(lambda, m)
   }
   
+  #asym.hatpi0 = function(pi0){
+  #  npi0 = pi0 * n
+  #  nlambda = npi0 * (1 - lambda)
+  #  s2 = nlambda*(n - nlambda) / (n^3 * (1 - lambda)^2)
+  #  s  = sqrt(s2)
+  #  zcrit  = (1 - pi0) / s
+  #  hatpi0 = pi0 + s * (-dnorm(zcrit) + (1 - pnorm(zcrit)) * zcrit)
+  #  return(hatpi0)
+  #}
   asym.hatpi0 = function(pi0){
     npi0 = pi0 * n
     nlambda = npi0 * (1 - lambda)
-    s2 = nlambda*(n - nlambda) / (n^3 * (1 - lambda)^2)
-    s  = sqrt(s2)
-    zcrit  = (1 - pi0) / s
-    hatpi0 = pi0 + s * (-dnorm(zcrit) + (1 - pnorm(zcrit)) * zcrit)
+    if(nlambda>=n){
+      hatpi0 = pi0
+    }else{
+      s2 = nlambda*(n - nlambda) / (n^3 * (1 - lambda)^2)
+      s  = sqrt(s2)
+      zcrit  = (1 - pi0) / s
+      hatpi0 = pi0 + s * (-dnorm(zcrit) + (1 - pnorm(zcrit)) * zcrit)
+    }
     return(hatpi0)
   }
+  
   
   asym.inverse = function(f, lower = -100, upper = 100){
     FUN = function (y) uniroot((function (x) f(x) - y), lower = lower, upper = upper)$root
