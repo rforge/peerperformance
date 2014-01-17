@@ -67,7 +67,7 @@
   at the R/Finance conference 2012 at \url{http://www.rinfinance.com}.
 
   Application of the false discovery rate approach applied to the mutual fund industry has been presented in 
-  Barraz, Scaillet and Wermers (2010). 
+  Barras, Scaillet and Wermers (2010). 
 
   Currently, the hac asymptotic and studentized circular block bootstrap presented in Ledoit and Wolf (2008) are not supported by
   the \code{alphaScreening} function.
