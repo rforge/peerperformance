@@ -109,17 +109,4 @@
 \seealso{%
   \code{\link{sharpeScreening}} and \code{\link{msharpeScreening}}.
 }
-\examples{%
-  ## Load the data (randomized data of monthly hedge fund returns)
-  data("hfdata")
-  dim(hfdata) 
-  hfdata = hfdata[,1:15] # subset for speedup
-
-  ## Run alpha screening (asympt, without factors, hence check pure outperformance)
-  set.seed(1234)
-  ctr = list(minObs = 12, minObsPi = 10, nBoot = 250,
-             nCore = 1, lambda = NULL)
-  out <- alphaScreening(hfdata, factors = NULL, ctr)
-  print(out)
-}
 \keyword{htest}
