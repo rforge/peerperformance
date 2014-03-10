@@ -11,12 +11,11 @@ alphaScreening = function(X, factors = NULL, control = list()) {
   N = ncol(X)
   pval = dalpha = matrix(data = NA, N, N)
   
+  # determine which pairs can be compared (in a matrix way)
   Y = 1 * (!is.nan(X) & !is.na(X))
-  #YY = t(Y) %*% Y # row i indicates how many observations in common with column k
-  YY = crossprod(Y)
+  YY = crossprod(Y) #YY = t(Y) %*% Y # row i indicates how many observations in common with column k
   YY[YY < ctr$minObs] = 0
-  YY[YY > 0] = 1
-  
+  YY[YY > 0] = 1 
   liststocks = c(1:nrow(YY))[rowSums(YY) > ctr$minObsPi]  
   
   if (length(liststocks) > 1){
@@ -24,13 +23,16 @@ alphaScreening = function(X, factors = NULL, control = list()) {
     
     liststocks = liststocks[1:(length(liststocks)-1)]
     
+    clusterEvalQ(cl, library(sandwich))
+    clusterEvalQ(cl, library(lmtest))
     z <- clusterApply(cl      = cl, 
                       x       = as.list(liststocks), 
                       fun     = alphaScreeningi, 
                       rdata   = X, 
                       factors = factors, 
                       T       = T, 
-                      N       = N)
+                      N       = N,
+                      hac     = ctr$hac)
     
     stopCluster(cl)
     
@@ -47,7 +49,7 @@ alphaScreening = function(X, factors = NULL, control = list()) {
   pi = computePi(pval = pval, dalpha = dalpha, lambda = ctr$lambda, nBoot = ctr$nBoot)
   
   # info on the funds  
-  info = infoFund(X)
+  info = infoFund(X, factors)
   
   # form output
   out = list(n       = info$nObs, 
@@ -63,7 +65,7 @@ alphaScreening = function(X, factors = NULL, control = list()) {
   return(out)
 }
 
-.alphaScreeningi = function(i, rdata, factors, T, N) {
+.alphaScreeningi = function(i, rdata, factors, T, N, hac){
   pvali = dalphai = rep(NA, N)
   
   nPeer = N - i
@@ -74,25 +76,54 @@ alphaScreening = function(X, factors = NULL, control = list()) {
   idx = (!is.nan(dXY)&!is.na(dXY))
   X[!idx] = NA
   Y[!idx] = NA    
-  #nObs = colSums(idx)
   
-  if (is.null(factors)){
-    fit = lm(dXY ~ 1)
+  if (!hac){
+    if (is.null(factors)){
+      fit = lm(dXY ~ 1)
+    }
+    else{
+      fit = lm(dXY ~ 1 + factors) 
+    }
+    sumfit = summary(fit)
+    if (nPeer == 1){
+      pvali[N]   = sumfit$coef[1,4]
+      dalphai[N] = sumfit$coef[1,1]
+    } 
+    else{
+      k = 1
+      for (j in (i + 1) : N){
+        pvali[j]   = sumfit[[k]]$coef[1,4]
+        dalphai[j] = sumfit[[k]]$coef[1,1]
+        k = k + 1
+      }
+    }
   }
-  else {
-    fit = lm(dXY ~ 1 + factors)
-  }
-  sumfit = summary(fit)
-  if (nPeer == 1) {
-    pvali[N]   = sumfit$coef[1,4]
-    dalphai[N] = sumfit$coef[1,1]
-  } 
-  else {
-    k = 1
-    for (j in (i + 1) : N) {
-      pvali[j]   = sumfit[[k]]$coef[1,4]
-      dalphai[j] = sumfit[[k]]$coef[1,1]
-      k = k + 1
+  else{
+    if (nPeer == 1){
+      if (is.null(factors)){
+        fit = lm(dXY ~ 1)
+      }
+      else{
+        fit = lm(dXY ~ 1 + factors) 
+      }
+      sumfit = coeftest(fit, vcov = vcovHAC(fit))
+      pvali[N]   = sumfit[1,4]
+      dalphai[N] = sumfit[1,1]
+    }
+    else{
+      k = 1
+      for (j in (i + 1) : N){
+        if (is.null(factors)){
+          fit = lm(dXY[,k] ~ 1)
+        }
+        else{
+          fit = lm(dXY[,k] ~ 1 + factors) 
+        }
+        sumfit = coeftest(fit, vcov = vcovHAC(fit))
+        pvali[j]   = sumfit[1,4]
+        dalphai[j] = sumfit[1,1]
+        k = k + 1
+      }
     }
   }
   

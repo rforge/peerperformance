@@ -10,7 +10,7 @@ citEntry(entry = "manual",
                              person("Ardia","David")),
          year = year,
 	 note = vers,
-	 url = "http://CRAN.R-project.org/package=PeerPerformance",
+	 url = "https://r-forge.r-project.org/R/?group_id=1813",
 	 textVersion =
          paste("Kris Boudt, Ardia David (", year,"). ",
                "'PeerPerformance': Peer performance analysis in 'R'. ", vers, ".", sep = "")
@@ -20,9 +20,9 @@ citEntry(entry = "misc",
 	 title = "The Peer Performance of Hedge Funds",
 	 author = personList(person("David","Ardia"),
                              person("Kris","Boudt")),
-         year = "2012",
+         year = "2014",
          url = "http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2000901",
 	 textVersion =
-         paste("David Ardia, Kris Boudt (2012).",
+         paste("David Ardia, Kris Boudt (2014).",
                "The Peer Performance of Hedge Funds.")
 )

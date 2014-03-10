@@ -1,3 +1,8 @@
+Changes in Version 2.0.2 (DA)
+  o alphaScreening fixed
+  o alphaScreening now encompasses hac estimation with sandwich and lmtest
+  o citation file updated
+
 Changes in Version 2.0.1 (DA)
   o new package's name
   o new package's number

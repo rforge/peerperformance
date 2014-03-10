@@ -125,11 +125,13 @@ msharpe = function(X, level = 0.95, na.rm = TRUE, na.neg = TRUE) {
   sigX    = sqrt(colSums(rX^2, na.rm = na.rm) / (nObs - 1))
   sharpe_ = muX / sigX
   
-  alpha_ = NULL
-  if (!is.null(factors)){
-    fit = lm(X ~ 1 + factors)
-    alpha_ = as.vector(fit$coef[1,])
+  if (is.null(factors)){
+    fit = lm(X ~ 1)
   }
+  else{
+    fit = lm(X ~ 1 + factors)
+  }
+  alpha_ = as.vector(fit$coef[1,])
   
   msharpe_ = NULL
   if (!is.null(level)){
