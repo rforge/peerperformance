@@ -21,6 +21,11 @@ alphaScreening = function(X, factors = NULL, control = list()) {
   if (length(liststocks) > 1){
     cl = makeCluster(c(rep("localhost", ctr$nCore)), type = "SOCK")
     
+    if (ctr$hac){
+      clusterEvalQ(cl, require("sandwich"))
+      clusterEvalQ(cl, require("lmtest"))
+    }
+   
     liststocks = liststocks[1:(length(liststocks)-1)]
     
     z <- clusterApply(cl      = cl, 
@@ -104,7 +109,7 @@ alphaScreening = function(X, factors = NULL, control = list()) {
       else{
         fit = lm(dXY ~ 1 + factors) 
       }
-      sumfit = coeftest(fit, vcov. = vcovHAC(fit))
+      sumfit = lmtest::coeftest(fit, vcov. = sandwich::vcovHAC(fit))
       pvali[N]   = sumfit[1,4]
       dalphai[N] = sumfit[1,1]
     }
