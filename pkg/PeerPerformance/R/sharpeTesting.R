@@ -6,7 +6,7 @@
 ## Test Sharpe ratio difference 
 ####################################################################################
 
-.sharpeTesting = function(x, y, control = list()){
+.sharpeTesting = function(x, y, rf.x = 0, rf.y = 0, control = list()){
   
   x = as.matrix(x)
   y = as.matrix(y)
@@ -26,7 +26,7 @@
   # sharpe testing
   if (ctr$type == 1){
     # ==> asymptotic approach
-    tmp = sharpeTestAsymptotic(rets, ctr$hac, ctr$ttype)
+    tmp = sharpeTestAsymptotic(rets, rf.x = 0, rf.y = 0, ctr$hac, ctr$ttype)
   }
   else{
     # ==> bootstrap approach (iid and circular block bootstrap)
@@ -34,11 +34,11 @@
       ctr$bBoot = sharpeBlockSize(x, y, ctr)
     }
     bsids = bootIndices(T, ctr$nBoot, ctr$bBoot)
-    tmp = sharpeTestBootstrap(rets, bsids, ctr$bBoot, ctr$ttype, ctr$pBoot)
+    tmp = sharpeTestBootstrap(rets, rf.x = 0, rf.y = 0, bsids, ctr$bBoot, ctr$ttype, ctr$pBoot)
   }
   
   # info on the funds  
-  info = infoFund(rets)
+  info = infoFund(rets, rf = c(rf.x, rf.y))
   
   ## form output
   out = list(n = T, 
@@ -56,7 +56,7 @@ sharpeTesting = cmpfun(.sharpeTesting)
 ####################################################################################
 
 # difference of sharpe ratios
-.sharpe.ratio.diff = function(X, Y, ttype){
+.sharpe.ratio.diff = function(X, Y, rf.x, rf.y, ttype){
   
   if (is.null(Y)){
     Y = X[,2,drop=FALSE]
@@ -71,12 +71,12 @@ sharpeTesting = cmpfun(.sharpeTesting)
   sig2.hat = sqrt(colSums(Y_^2) / (n - 1))
   
   if (ttype == 1){
-    SR1.hat = mu1.hat / sig1.hat
-    SR2.hat = mu2.hat / sig2.hat
+    SR1.hat = (mu1.hat - rf.x) / sig1.hat
+    SR2.hat = (mu2.hat - rf.y) / sig2.hat
   }
   else{
-    SR1.hat = mu1.hat * sig2.hat
-    SR2.hat = mu2.hat * sig1.hat
+    SR1.hat = (mu1.hat - rf.x) * sig2.hat
+    SR2.hat = (mu2.hat - rf.y) * sig1.hat
   }
   diff = SR1.hat - SR2.hat
   return(diff)
@@ -84,13 +84,13 @@ sharpeTesting = cmpfun(.sharpeTesting)
 }
 sharpe.ratio.diff = cmpfun(.sharpe.ratio.diff)
 
-.sharpeTestAsymptotic = function(rets, hac, ttype){
+.sharpeTestAsymptotic = function(rets, rf.x, rf.y, hac, ttype){
   
-  dsharpe = sharpe.ratio.diff(rets, Y = NULL, ttype)
+  dsharpe = sharpe.ratio.diff(rets, Y = NULL, rf.x, rf.y, ttype)
   se      = se.sharpe.asymptotic(rets, hac, ttype)
   tstat   = abs(dsharpe) / se
   pval    = 2 * pnorm(-tstat) # asymptotic normal p-value
-  out = list(dsharpe = dsharpe, tstat = tstat, se = se, pval = pval)
+  out     = list(dsharpe = dsharpe, tstat = tstat, se = se, pval = pval)
   return(out)
   
 }
@@ -170,9 +170,9 @@ sharpeTestAsymptotic = cmpfun(.sharpeTestAsymptotic)
   T = nrow(X)
   
   if (ttype == 1){
-    mu.hat = colMeans(X)
-    gamma.hat = colMeans(X^2)
-    gradient  = vector('double', 4)
+    mu.hat      = colMeans(X)
+    gamma.hat   = colMeans(X^2)
+    gradient    = vector('double', 4)
     gradient[1] = gamma.hat[1] / (gamma.hat[1] - mu.hat[1]^2)^1.5
     gradient[2] = -gamma.hat[2] / (gamma.hat[2] - mu.hat[2]^2)^1.5
     gradient[3] = -0.5 * mu.hat[1] / (gamma.hat[1] - mu.hat[1]^2)^1.5
@@ -209,12 +209,12 @@ se.sharpe.asymptotic = cmpfun(.se.sharpe.asymptotic)
 ## Test Sharpe difference using circular studentized boostrap of Ledoit and Wolf
 ####################################################################################
 
-.sharpeTestBootstrap = function(rets, bsids, b, ttype, pBoot, d = 0){
+.sharpeTestBootstrap = function(rets, rf.x, rf.y, bsids, b, ttype, pBoot, d = 0){
   
   T = nrow(rets)
   x = rets[,1,drop=FALSE]
   y = rets[,2,drop=FALSE]
-  dsharpe = sharpe.ratio.diff(x, y, ttype) - d
+  dsharpe = sharpe.ratio.diff(x, y, rf.x, rf.y, ttype) - d
   se = se.sharpe.bootstrap(x, y, b, ttype)
   
   # bootstrap indices
@@ -223,7 +223,7 @@ se.sharpe.asymptotic = cmpfun(.se.sharpe.asymptotic)
   bsX   = matrix(x[bsidx], T, nBoot)
   bsY   = matrix(y[bsidx], T, nBoot)
   
-  bsdsharpe = sharpe.ratio.diff(bsX, bsY, ttype)
+  bsdsharpe = sharpe.ratio.diff(bsX, bsY, rf.x, rf.y, ttype)
   bsse      = se.sharpe.bootstrap(bsX, bsY, b, ttype)
   
   if (pBoot == 1){

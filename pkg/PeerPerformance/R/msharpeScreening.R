@@ -2,7 +2,7 @@
 ## Set of R functions for modified Sharpe screening
 ####################################################################################
 
-msharpeScreening = function(X, level = 0.95, na.neg = TRUE, control = list()) {
+msharpeScreening = function(X, rf = 0, level = 0.90, na.neg = TRUE, control = list()) {
   
   # process control
   ctr = processControl(control)
@@ -11,6 +11,9 @@ msharpeScreening = function(X, level = 0.95, na.neg = TRUE, control = list()) {
   T = nrow(X) 
   N = ncol(X)
   pval = dmsharpe = matrix(data = NA, N, N)
+  if (length(rf) == 1){
+    rf = rep(rf, N)
+  }
   
   # determine which pairs can be compared (in a matrix way)
   Y = 1 * (!is.nan(X) & !is.na(X))
@@ -31,6 +34,7 @@ msharpeScreening = function(X, level = 0.95, na.neg = TRUE, control = list()) {
                       x      = as.list(liststocks), 
                       fun    = msharpeScreeningi, 
                       rdata  = X,
+                      rf     = rf,
                       level  = level,
                       T      = T, 
                       N      = N, 
@@ -58,7 +62,7 @@ msharpeScreening = function(X, level = 0.95, na.neg = TRUE, control = list()) {
   pi = computePi(pval = pval, dalpha = dmsharpe, lambda = ctr$lambda, nBoot = ctr$nBoot)
   
   # info on the funds  
-  info = infoFund(X, level = level, na.neg = na.neg)
+  info = infoFund(X, rf = rf, level = level, na.neg = na.neg)
   
   # form output
   out = list(n        = info$nObs, 
@@ -75,11 +79,13 @@ msharpeScreening = function(X, level = 0.95, na.neg = TRUE, control = list()) {
 }
 
 ## Sharpe ratio screening for fund i again its peers
-.msharpeScreeningi = function(i, rdata, level, T, N, nBoot, bsids, minObs, na.neg, type, hac, b, ttype, pBoot) {
+.msharpeScreeningi = function(i, rdata, rf, level, T, N, nBoot, bsids, minObs, na.neg, type, hac, b, ttype, pBoot) {
   
   nPeer = N - i
   X = matrix(rdata[,i], nrow = T, ncol = nPeer)
   Y = matrix(rdata[, (i+1):N], nrow = T, ncol = nPeer)
+  #rf.x = rf[i]
+  #rf.y = rf[(i+1):N]
   
   dXY = X - Y
   idx = (!is.nan(dXY)&!is.na(dXY))
@@ -98,10 +104,12 @@ msharpeScreening = function(X, level = 0.95, na.neg = TRUE, control = list()) {
     rets = cbind(X[idx[,k],1], Y[idx[,k],k])
     
     if (type == 1) {
-      tmp = msharpeTestAsymptotic(rets, level, na.neg, hac, ttype)
+      #tmp = msharpeTestAsymptotic(rets, rf.x, rf.y[k], level, na.neg, hac, ttype)
+      tmp = msharpeTestAsymptotic(rets, rf.x = 0, rf.y = 0, level, na.neg, hac, ttype)
     }
     else {
-      tmp = msharpeTestBootstrap(rets, level, na.neg, bsids, b, ttype, pBoot)
+      #tmp = msharpeTestBootstrap(rets, rf.x, rf.y[k], level, na.neg, bsids, b, ttype, pBoot)
+      tmp = msharpeTestBootstrap(rets, rf.x = 0, rf.y = 0, level, na.neg, bsids, b, ttype, pBoot)
     }
     
     dmsharpei[j] = tmp$dmsharpe

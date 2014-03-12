@@ -23,8 +23,6 @@ alphaScreening = function(X, factors = NULL, control = list()) {
     
     liststocks = liststocks[1:(length(liststocks)-1)]
     
-    clusterEvalQ(cl, library(sandwich))
-    clusterEvalQ(cl, library(lmtest))
     z <- clusterApply(cl      = cl, 
                       x       = as.list(liststocks), 
                       fun     = alphaScreeningi, 
@@ -106,7 +104,7 @@ alphaScreening = function(X, factors = NULL, control = list()) {
       else{
         fit = lm(dXY ~ 1 + factors) 
       }
-      sumfit = coeftest(fit, vcov = vcovHAC(fit))
+      sumfit = coeftest(fit, vcov. = vcovHAC(fit))
       pvali[N]   = sumfit[1,4]
       dalphai[N] = sumfit[1,1]
     }
@@ -119,7 +117,7 @@ alphaScreening = function(X, factors = NULL, control = list()) {
         else{
           fit = lm(dXY[,k] ~ 1 + factors) 
         }
-        sumfit = coeftest(fit, vcov = vcovHAC(fit))
+        sumfit = coeftest(fit, vcov. = vcovHAC(fit))
         pvali[j]   = sumfit[1,4]
         dalphai[j] = sumfit[1,1]
         k = k + 1

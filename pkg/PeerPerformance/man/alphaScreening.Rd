@@ -33,6 +33,7 @@
   The argument \code{control} is a list that can supply any of the following components:
   
   \describe{%
+    \item{\code{hac}}{heteroscedastic-autocorrelation consistent standard errors. Default: \code{hac = FALSE}.}
     \item{\code{minObs}}{minimum number of concordant observations to compute the ratios. Default: \code{minObs = 10}.}
     \item{\code{minObsPi}}{minimum number of observations for computing the p-values). Default: \code{minObsPi = 1}.}
     \item{\code{nCore}}{number of cores used to perform the screeing. Default: \code{nCore = 1}.}

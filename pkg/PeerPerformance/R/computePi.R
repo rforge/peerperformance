@@ -122,11 +122,14 @@ computePizero = cmpfun(.computePizero)
   m = length(pi.hat)
   out = vector('double', m)
   for (i in 1 : m){
-    out[i]  = pi.hat[i]
-    test.it = try({ out[i] = asym.invpi0(pi.hat[i]) }, silent = TRUE)
+    tmp = pi.hat[i]
+    test.it = try({ tmp = asym.invpi0(pi.hat[i]) }, silent = TRUE)
     if (class(test.it) == "try-error"){
-      out[i] = pi.hat[i]
+      tmp = pi.hat[i]
     }
+    tmp[tmp > 1] = 1 
+    tmp[tmp < 0] = 0
+    out[i] = tmp
   }
   return(out)
 }

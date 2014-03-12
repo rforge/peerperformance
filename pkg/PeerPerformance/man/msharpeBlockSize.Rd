@@ -7,12 +7,13 @@
 \description{%
   Function which computes the optimal block length for testing of the difference of modified Sharpe ratios}
 \usage{%
-  msharpeBlockSize(x, y, level = 0.95, na.neg = TRUE, control = list(), b.vec = c(1, 3, 6, 10), alpha = 0.05, M = 199, K = 500, b.av = 5, T.start = 50)
+  msharpeBlockSize(x, y, level = 0.90, na.neg = TRUE, control = list(),
+                   b.vec = c(1, 3, 6, 10), alpha = 0.05, M = 199, K = 500, b.av = 5, T.start = 50)
 }
 \arguments{%
   \item{x}{vector (of lenght \eqn{T}) of returns for the first fund. \code{NA} values are allowed.}
   \item{y}{vector (of lenght \eqn{T}) returns for the second fund. \code{NA} values are allowed.}
-  \item{level}{modified Value-at-Risk level. Default: \code{level = 0.95}.}
+  \item{level}{modified Value-at-Risk level. Default: \code{level = 0.90}.}
   \item{na.neg}{a logical value indicating whether \code{NA} values should be returned if a negative modified Value-at-Risk is obtained. 
   Default \code{na.neg = TRUE}.}
   \item{control}{control parameters (see *Details*).}
@@ -46,7 +47,7 @@
   David Ardia and Kris Boudt.
 }
 \references{%
-  Ardia, D., Boudt, K. (2012).
+  Ardia, D., Boudt, K. (2014).
   \emph{The Peer Performance of Hedge Funds}.
   \url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2000901}
 

@@ -6,7 +6,7 @@
 ## Test modified Sharpe ratio difference 
 ####################################################################################
 
-.msharpeTesting = function(x, y, level = 0.95, na.neg = TRUE, control = list()){
+.msharpeTesting = function(x, y, rf.x = 0, rf.y = 0, level = 0.90, na.neg = TRUE, control = list()){
   
   x = as.matrix(x)
   y = as.matrix(y)
@@ -26,7 +26,7 @@
   # msharpe testing
   if (ctr$type == 1) {
     # ==> asymptotic approach
-    tmp = msharpeTestAsymptotic(rets, level, na.neg, ctr$hac, ctr$ttype)
+    tmp = msharpeTestAsymptotic(rets, rf.x = 0, rf.y = 0, level, na.neg, ctr$hac, ctr$ttype)
   }
   else {
     # ==> bootstrap approach (iid and circular block bootstrap)
@@ -34,11 +34,11 @@
       ctr$bBoot = msharpeBlockSize(x, y, level, na.neg, ctr)
     }
     bsids = bootIndices(T, ctr$nBoot, ctr$bBoot)
-    tmp = msharpeTestBootstrap(rets, level, na.neg, bsids, ctr$bBoot, ctr$ttype, ctr$pBoot)
+    tmp = msharpeTestBootstrap(rets, rf.x = 0, rf.y = 0, level, na.neg, bsids, ctr$bBoot, ctr$ttype, ctr$pBoot)
   }
   
   # info on the funds  
-  info = infoFund(rets, level = level, na.neg = na.neg)
+  info = infoFund(rets, rf = c(rf.x, rf.y), level = level, na.neg = na.neg)
   
   ## form output
   out = list(n = T, 
@@ -56,7 +56,7 @@ msharpeTesting = cmpfun(.msharpeTesting)
 ####################################################################################
 
 # difference of sharpe ratios
-.msharpe.ratio.diff = function(X, Y = NULL, level, na.neg, ttype){
+.msharpe.ratio.diff = function(X, Y = NULL, rf.x = 0, rf.y = 0, level, na.neg, ttype){
   if (is.null(Y)){
     Y = X[,2,drop=FALSE]
     X = X[,1,drop=FALSE]
@@ -84,13 +84,13 @@ msharpeTesting = cmpfun(.msharpeTesting)
   }
   if (ttype == 1){
     # test based on quotient
-    mSR1 = m1X / mVaRX
-    mSR2 = m1Y / mVaRY
+    mSR1 = (m1X - rf.x) / mVaRX
+    mSR2 = (m1Y - rf.y) / mVaRY
   }
   else{
     # test based on product
-    mSR1 = m1X * mVaRY
-    mSR2 = m1Y * mVaRX
+    mSR1 = (m1X - rf.x) * mVaRY
+    mSR2 = (m1Y - rf.y) * mVaRX
   }
   diff = mSR1 - mSR2
   return(diff)
@@ -98,9 +98,9 @@ msharpeTesting = cmpfun(.msharpeTesting)
 }
 msharpe.ratio.diff = cmpfun(.msharpe.ratio.diff)
 
-.msharpeTestAsymptotic = function(rets, level, na.neg, hac, ttype){
+.msharpeTestAsymptotic = function(rets, rf.x, rf.y, level, na.neg, hac, ttype){
   
-  dmsharpe = msharpe.ratio.diff(rets, Y = NULL, level, na.neg, ttype)
+  dmsharpe = msharpe.ratio.diff(rets, Y = NULL, rf.x, rf.y, level, na.neg, ttype)
   if (is.na(dmsharpe)){
     out = list(dmsharpe = NA, tstat = NA, se = NA, pval = NA)
     return(out)
@@ -260,13 +260,13 @@ se.msharpe.asymptotic = cmpfun(.se.msharpe.asymptotic)
 ## Test modified Sharpe ratio difference using circular studentized boostrap of Ledoit and Wolf
 ####################################################################################
 
-.msharpeTestBootstrap = function(rets, level, na.neg, bsids, b, ttype, pBoot, d = 0){
+.msharpeTestBootstrap = function(rets, rf.x, rf.y, level, na.neg, bsids, b, ttype, pBoot, d = 0){
   
   T = nrow(rets)
   x = rets[,1,drop=FALSE]
   y = rets[,2,drop=FALSE]
   
-  dmsharpe = msharpe.ratio.diff(x, y, level, na.neg, ttype) - d 
+  dmsharpe = msharpe.ratio.diff(x, y, rf.x, rf.y, level, na.neg, ttype) - d 
   if (is.na(dmsharpe)){
     out = list(dmsharpe = NA, tstat = NA, se = NA, bststat = NA, pval = NA)
     return(out)
@@ -279,7 +279,7 @@ se.msharpe.asymptotic = cmpfun(.se.msharpe.asymptotic)
   bsX   = matrix(x[bsidx], T, nBoot)
   bsY   = matrix(y[bsidx], T, nBoot)
   
-  bsdmsharpe = msharpe.ratio.diff(bsX, bsY, level, na.neg = FALSE, ttype) # DA consider negative mVaR as well in the bootstrap
+  bsdmsharpe = msharpe.ratio.diff(bsX, bsY, rf.x, rf.y, level, na.neg = FALSE, ttype) # DA consider negative mVaR as well in the bootstrap
   bsse       = se.msharpe.bootstrap(bsX, bsY, level, b, ttype)
   
   if (pBoot == 1){

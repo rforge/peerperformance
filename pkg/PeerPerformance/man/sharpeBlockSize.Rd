@@ -6,7 +6,8 @@
 \description{%
   Function which computes the optimal block length for testing of the difference of Sharpe ratios}
 \usage{%
-  sharpeBlockSize(x, y, control = list(), b.vec = c(1, 3, 6, 10), alpha = 0.05, M = 199, K = 500, b.av = 5, T.start = 50)
+  sharpeBlockSize(x, y, control = list(),
+                  b.vec = c(1, 3, 6, 10), alpha = 0.05, M = 199, K = 500, b.av = 5, T.start = 50)
 }
 \arguments{%
   \item{x}{vector (of lenght \eqn{T}) of returns for the first fund. \code{NA} values are allowed.}
@@ -42,7 +43,7 @@
   David Ardia and Kris Boudt.
 }
 \references{%
-  Ardia, D., Boudt, K. (2012).
+  Ardia, D., Boudt, K. (2014).
   \emph{The Peer Performance of Hedge Funds}.
   \url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2000901}
 

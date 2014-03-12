@@ -7,12 +7,13 @@
 \description{%
   Function which computes the modified Sharpe ratio}
 \usage{%
-  msharpe(X, level = 0.95, na.rm = TRUE, na.neg = TRUE)
+  msharpe(X, rf = 0, level = 0.90, na.rm = TRUE, na.neg = TRUE)
 }
 \arguments{%
   \item{X}{vector (of lenght \eqn{T}) or matrix (of size \eqn{T \times N}{TxN}) of returns. 
   \code{NA} values are allowed.}
-  \item{level}{modified Value-at-Risk level. Default: \code{level = 0.95}.}
+  \item{rf}{scalar or vector (of lenght \eqn{N}) of risk-free rate. Default \code{rf = 0}.}
+  \item{level}{modified Value-at-Risk level. Default: \code{level = 0.90}.}
   \item{na.rm}{a logical value indicating whether \code{NA} values should be stripped before the computation. Default \code{na.rm = TRUE}.}
   \item{na.neg}{a logical value indicating whether \code{NA} values should be returned if a negative modified Value-at-Risk is obtained.
   Default \code{na.neg = TRUE}.}
@@ -31,7 +32,7 @@
   David Ardia and Kris Boudt.
 }
 \references{%
-  Ardia, D., Boudt, K. (2012).
+  Ardia, D., Boudt, K. (2014).
   \emph{The Peer Performance of Hedge Funds}.
   \url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2000901}
 

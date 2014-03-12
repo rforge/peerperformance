@@ -2,7 +2,7 @@
 ## Set of R functions for Sharpe screening
 ####################################################################################
 
-sharpeScreening = function(X, control = list()) {
+sharpeScreening = function(X, rf = 0, control = list()) {
   
   # process control
   ctr = processControl(control)
@@ -11,6 +11,9 @@ sharpeScreening = function(X, control = list()) {
   T = nrow(X) 
   N = ncol(X)
   pval = dsharpe = matrix(data = NA, N, N)
+  if (length(rf) == 1){
+    rf = rep(rf, N)
+  }
   
   # determine which pairs can be compared (in a matrix way)
   Y = 1 * (!is.nan(X) & !is.na(X))
@@ -30,7 +33,8 @@ sharpeScreening = function(X, control = list()) {
     z <- clusterApply(cl     = cl, 
                       x      = as.list(liststocks), 
                       fun    = sharpeScreeningi, 
-                      rdata  = X, 
+                      rdata  = X,
+                      rf     = rf,
                       T      = T, 
                       N      = N, 
                       nBoot  = ctr$nBoot, 
@@ -56,7 +60,7 @@ sharpeScreening = function(X, control = list()) {
   pi = computePi(pval = pval, dalpha = dsharpe, lambda = ctr$lambda, nBoot = ctr$nBoot)
   
   # info on the funds  
-  info = infoFund(X)
+  info = infoFund(X, rf)
   
   # form output
   out = list(n       = info$nObs, 
@@ -73,11 +77,13 @@ sharpeScreening = function(X, control = list()) {
 }
 
 ## Sharpe ratio screening for fund i again its peers
-.sharpeScreeningi = function(i, rdata, T, N, nBoot, bsids, minObs, type, hac, b, ttype, pBoot) {
+.sharpeScreeningi = function(i, rdata, rf, T, N, nBoot, bsids, minObs, type, hac, b, ttype, pBoot) {
   
   nPeer = N - i
   X = matrix(rdata[,i], nrow = T, ncol = nPeer)
   Y = matrix(rdata[, (i+1):N], nrow = T, ncol = nPeer)
+  #rf.x = rf[i]
+  #rf.y = rf[(i+1):N]
   
   dXY = X - Y
   idx = (!is.nan(dXY)&!is.na(dXY))
@@ -96,10 +102,12 @@ sharpeScreening = function(X, control = list()) {
     rets = cbind(X[idx[,k],1], Y[idx[,k],k])
     
     if (type == 1) {
-      tmp = sharpeTestAsymptotic(rets, hac, ttype)
+      #tmp = sharpeTestAsymptotic(rets, rf.x, rf.y[k], hac, ttype)
+      tmp = sharpeTestAsymptotic(rets, rf.x = 0, rf.y = 0, hac, ttype)
     }
     else {
-      tmp = sharpeTestBootstrap(rets, bsids, b, ttype, pBoot)
+      #tmp = sharpeTestBootstrap(rets, rf.x, rf.y[k], bsids, b, ttype, pBoot)
+      tmp = sharpeTestBootstrap(rets, rf.x = 0, rf.y = 0, bsids, b, ttype, pBoot)
     }
     
     dsharpei[j] = tmp$dsharpe
