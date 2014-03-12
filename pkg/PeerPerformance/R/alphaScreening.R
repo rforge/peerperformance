@@ -47,7 +47,7 @@ alphaScreening = function(X, factors = NULL, control = list()) {
   pi = computePi(pval = pval, dalpha = dalpha, lambda = ctr$lambda, nBoot = ctr$nBoot)
   
   # info on the funds  
-  info = infoFund(X, factors)
+  info = infoFund(X, rf = 0, factors = factors)
   
   # form output
   out = list(n       = info$nObs, 
