@@ -68,14 +68,11 @@ alphaFactor = function(X, factors = NULL) {
 ## Compute the Sharpe ratio
 ####################################################################################
 
-sharpe = function(X, rf = 0, na.rm = TRUE) {
+sharpe = function(X, na.rm = TRUE) {
   X = as.matrix(X)
   N = ncol(X)
-  if (length(rf) == 1){
-    rf = rep(rf, N)
-  }
   tmp = .sharpe(X, na.rm)
-  out = (tmp$mu.hat - rf) / tmp$sig.hat
+  out = tmp$mu.hat / tmp$sig.hat
   return(out)
 }
 
@@ -92,14 +89,11 @@ sharpe = function(X, rf = 0, na.rm = TRUE) {
 ## Compute the modified Sharpe ratio
 ####################################################################################
 
-msharpe = function(X, rf = 0, level = 0.90, na.rm = TRUE, na.neg = TRUE) {
+msharpe = function(X, level = 0.90, na.rm = TRUE, na.neg = TRUE) {
   X = as.matrix(X)
   N = ncol(X)
-  if (length(rf) == 1){
-    rf = rep(rf, N)
-  }
   tmp = .msharpe(X, level, na.rm, na.neg)
-  out = (tmp$m1 - rf) / tmp$mVaR
+  out = tmp$m1 / tmp$mVaR
   return(out)
 }
 
@@ -125,17 +119,14 @@ msharpe = function(X, rf = 0, level = 0.90, na.rm = TRUE, na.neg = TRUE) {
 ## Fund information
 ####################################################################################
 
-.infoFund = function(X, rf = 0, factors = NULL, level = NULL, na.rm = TRUE, na.neg = TRUE) {
+.infoFund = function(X, factors = NULL, level = NULL, na.rm = TRUE, na.neg = TRUE) {
   X = as.matrix(X)
   N = ncol(X)
-  if (length(rf) == 1){
-    rf = rep(rf, N)
-  }
   nObs    = colSums(!is.nan(X))
   muX     = colMeans(X, na.rm = na.rm)
   rX      = sweep(x = X, MARGIN = 2, STATS = muX, FUN = "-")
   sigX    = sqrt(colSums(rX^2, na.rm = na.rm) / (nObs - 1))
-  sharpe_ = (muX - rf) / sigX
+  sharpe_ = muX / sigX
   
   if (is.null(factors)){
     fit = lm(X ~ 1)
@@ -147,7 +138,7 @@ msharpe = function(X, rf = 0, level = 0.90, na.rm = TRUE, na.neg = TRUE) {
   
   msharpe_ = NULL
   if (!is.null(level)){
-    msharpe_ = msharpe(X, rf = rf, level = level, na.rm = na.rm, na.neg = na.neg)
+    msharpe_ = msharpe(X, level = level, na.rm = na.rm, na.neg = na.neg)
   }
   
   out = list(nObs = nObs, mu = muX, sig = sigX, sharpe = sharpe_, alpha = alpha_, msharpe = msharpe_)

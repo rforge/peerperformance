@@ -6,13 +6,11 @@
 \description{%
   Function which performs the testing of the difference of Sharpe ratios}
 \usage{%
-  sharpeTesting(x, y, rf.x = 0, rf.y = 0, control = list())
+  sharpeTesting(x, y, control = list())
 }
 \arguments{%
   \item{x}{vector (of lenght \eqn{T}) of returns for the first fund. \code{NA} values are allowed.}
   \item{y}{vector (of lenght \eqn{T}) returns for the second fund. \code{NA} values are allowed.}
-  \item{rf.x}{scalar of risk-free rate for first fund. Default \code{rf.x = 0}.}
-  \item{rf.y}{scalar of risk-free rate for second fund. Default \code{rf.y = 0}.}
   \item{control}{control parameters (see *Details*).}
 }
 \details{%

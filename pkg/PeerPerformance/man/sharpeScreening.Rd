@@ -8,11 +8,10 @@
 \description{%
   Function which performs the screening of a universe of returns, and compute the Sharpe outperformance ratio}
 \usage{%
-sharpeScreening(X, rf = 0, control = list())
+sharpeScreening(X, control = list())
 }
 \arguments{%
   \item{X}{matrix \eqn{(T \times N)}{(TxN)} of \eqn{T} returns for the \eqn{N} funds. \code{NA} values are allowed.}
-  \item{rf}{scalar or vector (of lenght \eqn{N}) of risk-free rate. Default \code{rf = 0}.}
   \item{control}{control parameters (see *Details*).}
 }
 \details{%

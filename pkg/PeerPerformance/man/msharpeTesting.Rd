@@ -7,13 +7,11 @@
 \description{%
   Function which performs the testing of the difference of modified Sharpe ratios}
 \usage{%
-  msharpeTesting(x, y, rf.x = 0, rf.y = 0, level = 0.90, na.neg = TRUE, control = list())
+  msharpeTesting(x, y, level = 0.90, na.neg = TRUE, control = list())
 }
 \arguments{%
   \item{x}{vector (of lenght \eqn{T}) of returns for the first fund. \code{NA} values are allowed.}
   \item{y}{vector (of lenght \eqn{T}) returns for the second fund. \code{NA} values are allowed.}
-  \item{rf.x}{scalar of risk-free rate for first fund. Default \code{rf.x = 0}.}
-  \item{rf.y}{scalar of risk-free rate for second fund. Default \code{rf.y = 0}.}
   \item{level}{modified Value-at-Risk level. Default: \code{level = 0.90}.}
   \item{na.neg}{a logical value indicating whether \code{NA} values should be returned if a negative modified Value-at-Risk is obtained. 
   Default \code{na.neg = TRUE}.}

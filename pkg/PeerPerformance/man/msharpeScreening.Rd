@@ -9,11 +9,10 @@
 \description{%
   Function which performs the screening of a universe of returns, and compute the modified Sharpe outperformance ratio}
 \usage{%
-  msharpeScreening(X, rf = 0, level = 0.90, na.neg = TRUE, control = list())
+  msharpeScreening(X, level = 0.90, na.neg = TRUE, control = list())
 }
 \arguments{%
   \item{X}{matrix \eqn{(T \times N)}{(TxN)} of \eqn{T} returns for the \eqn{N} funds. \code{NA} values are allowed.}
-  \item{rf}{scalar or vector (of lenght \eqn{N}) of risk-free rate. Default \code{rf = 0}.}
   \item{level}{modified Value-at-Risk level. Default: \code{level = 0.90}.}
   \item{na.neg}{a logical value indicating whether \code{NA} values should be returned if a negative modified Value-at-Risk is obtained.
   Default \code{na.neg = TRUE}.}

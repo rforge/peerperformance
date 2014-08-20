@@ -2,7 +2,7 @@
 ## Set of R functions for Sharpe screening
 ####################################################################################
 
-sharpeScreening = function(X, rf = 0, control = list()) {
+sharpeScreening = function(X, control = list()) {
   
   # process control
   ctr = processControl(control)
@@ -10,10 +10,7 @@ sharpeScreening = function(X, rf = 0, control = list()) {
   # size of inputs and outputs
   T = nrow(X) 
   N = ncol(X)
-  pval = dsharpe = matrix(data = NA, N, N)
-  if (length(rf) == 1){
-    rf = rep(rf, N)
-  }
+  pval = dsharpe = tstat = matrix(data = NA, N, N)
   
   # determine which pairs can be compared (in a matrix way)
   Y = 1 * (!is.nan(X) & !is.na(X))
@@ -34,7 +31,6 @@ sharpeScreening = function(X, rf = 0, control = list()) {
                       x      = as.list(liststocks), 
                       fun    = sharpeScreeningi, 
                       rdata  = X,
-                      rf     = rf,
                       T      = T, 
                       N      = N, 
                       nBoot  = ctr$nBoot, 
@@ -53,14 +49,16 @@ sharpeScreening = function(X, rf = 0, control = list()) {
       pval[id,id:N]    = pval[id:N,id] = out[[2]][id:N]
       dsharpe[id,id:N] = out[[1]][id:N]
       dsharpe[id:N,id] = -out[[1]][id:N]
+      tstat[id,id:N]   = out[[3]][id:N]
+      tstat[id:N,id]   = -out[[3]][id:N]
     }
   }
   
   # pi
-  pi = computePi(pval = pval, dalpha = dsharpe, lambda = ctr$lambda, nBoot = ctr$nBoot)
+  pi = computePi(pval = pval, dalpha = dsharpe, tstat = tstat, lambda = ctr$lambda, nBoot = ctr$nBoot)
   
   # info on the funds  
-  info = infoFund(X, rf)
+  info = infoFund(X)
   
   # form output
   out = list(n       = info$nObs, 
@@ -68,6 +66,7 @@ sharpeScreening = function(X, rf = 0, control = list()) {
              sharpe  = info$sharpe, 
              dsharpe = dsharpe, 
              pval    = pval,
+             tstat   = tstat,
              lambda  = pi$lambda,
              pizero  = pi$pizero,
              pipos   = pi$pipos,
@@ -77,13 +76,11 @@ sharpeScreening = function(X, rf = 0, control = list()) {
 }
 
 ## Sharpe ratio screening for fund i again its peers
-.sharpeScreeningi = function(i, rdata, rf, T, N, nBoot, bsids, minObs, type, hac, b, ttype, pBoot) {
+.sharpeScreeningi = function(i, rdata, T, N, nBoot, bsids, minObs, type, hac, b, ttype, pBoot) {
   
   nPeer = N - i
   X = matrix(rdata[,i], nrow = T, ncol = nPeer)
   Y = matrix(rdata[, (i+1):N], nrow = T, ncol = nPeer)
-  #rf.x = rf[i]
-  #rf.y = rf[(i+1):N]
   
   dXY = X - Y
   idx = (!is.nan(dXY)&!is.na(dXY))
@@ -91,7 +88,7 @@ sharpeScreening = function(X, rf = 0, control = list()) {
   Y[!idx] = NA    
   nObs = colSums(idx)
   
-  pvali = dsharpei = rep(NA, N)
+  pvali = dsharpei = tstati = rep(NA, N)
   
   k = 0
   for (j in (i + 1) : N) {
@@ -102,19 +99,18 @@ sharpeScreening = function(X, rf = 0, control = list()) {
     rets = cbind(X[idx[,k],1], Y[idx[,k],k])
     
     if (type == 1) {
-      #tmp = sharpeTestAsymptotic(rets, rf.x, rf.y[k], hac, ttype)
-      tmp = sharpeTestAsymptotic(rets, rf.x = 0, rf.y = 0, hac, ttype)
+      tmp = sharpeTestAsymptotic(rets, hac, ttype)
     }
     else {
-      #tmp = sharpeTestBootstrap(rets, rf.x, rf.y[k], bsids, b, ttype, pBoot)
-      tmp = sharpeTestBootstrap(rets, rf.x = 0, rf.y = 0, bsids, b, ttype, pBoot)
+      tmp = sharpeTestBootstrap(rets, bsids, b, ttype, pBoot)
     }
     
     dsharpei[j] = tmp$dsharpe
-    pvali[j] = tmp$pval
+    pvali[j]    = tmp$pval
+    tstati[j]   = tmp$tstat 
   }
   
-  out = list(dsharpei = dsharpei, pvali = pvali)
+  out = list(dsharpei = dsharpei, pvali = pvali, tstati = tstati)
   return(out)   
 }
 sharpeScreeningi = cmpfun(.sharpeScreeningi)

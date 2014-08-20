@@ -6,7 +6,7 @@
 ## Test Sharpe ratio difference 
 ####################################################################################
 
-.sharpeTesting = function(x, y, rf.x = 0, rf.y = 0, control = list()){
+.sharpeTesting = function(x, y, control = list()){
   
   x = as.matrix(x)
   y = as.matrix(y)
@@ -26,7 +26,7 @@
   # sharpe testing
   if (ctr$type == 1){
     # ==> asymptotic approach
-    tmp = sharpeTestAsymptotic(rets, rf.x = 0, rf.y = 0, ctr$hac, ctr$ttype)
+    tmp = sharpeTestAsymptotic(rets, ctr$hac, ctr$ttype)
   }
   else{
     # ==> bootstrap approach (iid and circular block bootstrap)
@@ -34,11 +34,11 @@
       ctr$bBoot = sharpeBlockSize(x, y, ctr)
     }
     bsids = bootIndices(T, ctr$nBoot, ctr$bBoot)
-    tmp = sharpeTestBootstrap(rets, rf.x = 0, rf.y = 0, bsids, ctr$bBoot, ctr$ttype, ctr$pBoot)
+    tmp = sharpeTestBootstrap(rets, bsids, ctr$bBoot, ctr$ttype, ctr$pBoot)
   }
   
   # info on the funds  
-  info = infoFund(rets, rf = c(rf.x, rf.y))
+  info = infoFund(rets)
   
   ## form output
   out = list(n = T, 
@@ -56,7 +56,7 @@ sharpeTesting = cmpfun(.sharpeTesting)
 ####################################################################################
 
 # difference of sharpe ratios
-.sharpe.ratio.diff = function(X, Y, rf.x, rf.y, ttype){
+.sharpe.ratio.diff = function(X, Y, ttype){
   
   if (is.null(Y)){
     Y = X[,2,drop=FALSE]
@@ -71,12 +71,12 @@ sharpeTesting = cmpfun(.sharpeTesting)
   sig2.hat = sqrt(colSums(Y_^2) / (n - 1))
   
   if (ttype == 1){
-    SR1.hat = (mu1.hat - rf.x) / sig1.hat
-    SR2.hat = (mu2.hat - rf.y) / sig2.hat
+    SR1.hat = mu1.hat / sig1.hat
+    SR2.hat = mu2.hat / sig2.hat
   }
   else{
-    SR1.hat = (mu1.hat - rf.x) * sig2.hat
-    SR2.hat = (mu2.hat - rf.y) * sig1.hat
+    SR1.hat = mu1.hat * sig2.hat
+    SR2.hat = mu2.hat * sig1.hat
   }
   diff = SR1.hat - SR2.hat
   return(diff)
@@ -84,12 +84,12 @@ sharpeTesting = cmpfun(.sharpeTesting)
 }
 sharpe.ratio.diff = cmpfun(.sharpe.ratio.diff)
 
-.sharpeTestAsymptotic = function(rets, rf.x, rf.y, hac, ttype){
+.sharpeTestAsymptotic = function(rets, hac, ttype){
   
-  dsharpe = sharpe.ratio.diff(rets, Y = NULL, rf.x, rf.y, ttype)
+  dsharpe = sharpe.ratio.diff(rets, Y = NULL, ttype)
   se      = se.sharpe.asymptotic(rets, hac, ttype)
-  tstat   = abs(dsharpe) / se
-  pval    = 2 * pnorm(-tstat) # asymptotic normal p-value
+  tstat   = dsharpe / se
+  pval    = 2 * pnorm(-abs(tstat)) # asymptotic normal p-value
   out     = list(dsharpe = dsharpe, tstat = tstat, se = se, pval = pval)
   return(out)
   
@@ -209,12 +209,12 @@ se.sharpe.asymptotic = cmpfun(.se.sharpe.asymptotic)
 ## Test Sharpe difference using circular studentized boostrap of Ledoit and Wolf
 ####################################################################################
 
-.sharpeTestBootstrap = function(rets, rf.x, rf.y, bsids, b, ttype, pBoot, d = 0){
+.sharpeTestBootstrap = function(rets, bsids, b, ttype, pBoot, d = 0){
   
   T = nrow(rets)
   x = rets[,1,drop=FALSE]
   y = rets[,2,drop=FALSE]
-  dsharpe = sharpe.ratio.diff(x, y, rf.x, rf.y, ttype) - d
+  dsharpe = sharpe.ratio.diff(x, y, ttype) - d
   se = se.sharpe.bootstrap(x, y, b, ttype)
   
   # bootstrap indices
@@ -223,18 +223,17 @@ se.sharpe.asymptotic = cmpfun(.se.sharpe.asymptotic)
   bsX   = matrix(x[bsidx], T, nBoot)
   bsY   = matrix(y[bsidx], T, nBoot)
   
-  bsdsharpe = sharpe.ratio.diff(bsX, bsY, rf.x, rf.y, ttype)
+  bsdsharpe = sharpe.ratio.diff(bsX, bsY, ttype)
   bsse      = se.sharpe.bootstrap(bsX, bsY, b, ttype)
+  tstat     = dsharpe / se
   
   if (pBoot == 1){
     # first type p-value calculation
-    tstat   = abs(dsharpe) / se
-    bststat = abs(bsdsharpe - dsharpe) / bsse
-    pval    = sum(bststat > tstat) / (nBoot + 1)
+    bststat = abs(bsdsharpe - abs(dsharpe)) / bsse
+    pval    = sum(bststat > abs(tstat)) / (nBoot + 1)
   }
   else{
     # second type p-value calculation (as in Barras)
-    tstat   = dsharpe / se
     bststat = (bsdsharpe - dsharpe) / bsse
     pval    = 2 * min(sum(bststat > tstat) + 1, sum(bststat < tstat) + 1) / (nBoot + 1)
   }

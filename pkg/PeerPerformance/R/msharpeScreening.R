@@ -2,7 +2,7 @@
 ## Set of R functions for modified Sharpe screening
 ####################################################################################
 
-msharpeScreening = function(X, rf = 0, level = 0.90, na.neg = TRUE, control = list()) {
+msharpeScreening = function(X, level = 0.90, na.neg = TRUE, control = list()) {
   
   # process control
   ctr = processControl(control)
@@ -10,10 +10,7 @@ msharpeScreening = function(X, rf = 0, level = 0.90, na.neg = TRUE, control = li
   # size of inputs and outputs
   T = nrow(X) 
   N = ncol(X)
-  pval = dmsharpe = matrix(data = NA, N, N)
-  if (length(rf) == 1){
-    rf = rep(rf, N)
-  }
+  pval = dmsharpe = tstat = matrix(data = NA, N, N)
   
   # determine which pairs can be compared (in a matrix way)
   Y = 1 * (!is.nan(X) & !is.na(X))
@@ -34,7 +31,6 @@ msharpeScreening = function(X, rf = 0, level = 0.90, na.neg = TRUE, control = li
                       x      = as.list(liststocks), 
                       fun    = msharpeScreeningi, 
                       rdata  = X,
-                      rf     = rf,
                       level  = level,
                       T      = T, 
                       N      = N, 
@@ -55,14 +51,16 @@ msharpeScreening = function(X, rf = 0, level = 0.90, na.neg = TRUE, control = li
       pval[id,id:N]     = pval[id:N,id] = out[[2]][id:N]
       dmsharpe[id,id:N] = out[[1]][id:N]
       dmsharpe[id:N,id] = -out[[1]][id:N]
+      tstat[id,id:N]    = out[[3]][id:N]
+      tstat[id:N,id]    = -out[[3]][id:N]
     }
   }
   
   # pi
-  pi = computePi(pval = pval, dalpha = dmsharpe, lambda = ctr$lambda, nBoot = ctr$nBoot)
+  pi = computePi(pval = pval, dalpha = dmsharpe, tstat = tstat, lambda = ctr$lambda, nBoot = ctr$nBoot)
   
   # info on the funds  
-  info = infoFund(X, rf = rf, level = level, na.neg = na.neg)
+  info = infoFund(X, level = level, na.neg = na.neg)
   
   # form output
   out = list(n        = info$nObs, 
@@ -70,6 +68,7 @@ msharpeScreening = function(X, rf = 0, level = 0.90, na.neg = TRUE, control = li
              msharpe  = info$msharpe, 
              dmsharpe = dmsharpe, 
              pval     = pval,
+             tstat    = tstat,
              lambda   = pi$lambda,
              pizero   = pi$pizero,
              pipos    = pi$pipos,
@@ -79,13 +78,11 @@ msharpeScreening = function(X, rf = 0, level = 0.90, na.neg = TRUE, control = li
 }
 
 ## Sharpe ratio screening for fund i again its peers
-.msharpeScreeningi = function(i, rdata, rf, level, T, N, nBoot, bsids, minObs, na.neg, type, hac, b, ttype, pBoot) {
+.msharpeScreeningi = function(i, rdata, level, T, N, nBoot, bsids, minObs, na.neg, type, hac, b, ttype, pBoot) {
   
   nPeer = N - i
   X = matrix(rdata[,i], nrow = T, ncol = nPeer)
   Y = matrix(rdata[, (i+1):N], nrow = T, ncol = nPeer)
-  #rf.x = rf[i]
-  #rf.y = rf[(i+1):N]
   
   dXY = X - Y
   idx = (!is.nan(dXY)&!is.na(dXY))
@@ -93,7 +90,7 @@ msharpeScreening = function(X, rf = 0, level = 0.90, na.neg = TRUE, control = li
   Y[!idx] = NA    
   nObs = colSums(idx)
   
-  pvali = dmsharpei = rep(NA, N)
+  pvali = dmsharpei = tstati = rep(NA, N)
   
   k = 0
   for (j in (i + 1) : N) {
@@ -104,19 +101,18 @@ msharpeScreening = function(X, rf = 0, level = 0.90, na.neg = TRUE, control = li
     rets = cbind(X[idx[,k],1], Y[idx[,k],k])
     
     if (type == 1) {
-      #tmp = msharpeTestAsymptotic(rets, rf.x, rf.y[k], level, na.neg, hac, ttype)
-      tmp = msharpeTestAsymptotic(rets, rf.x = 0, rf.y = 0, level, na.neg, hac, ttype)
+      tmp = msharpeTestAsymptotic(rets, level, na.neg, hac, ttype)
     }
     else {
-      #tmp = msharpeTestBootstrap(rets, rf.x, rf.y[k], level, na.neg, bsids, b, ttype, pBoot)
-      tmp = msharpeTestBootstrap(rets, rf.x = 0, rf.y = 0, level, na.neg, bsids, b, ttype, pBoot)
+      tmp = msharpeTestBootstrap(rets, level, na.neg, bsids, b, ttype, pBoot)
     }
     
     dmsharpei[j] = tmp$dmsharpe
-    pvali[j] = tmp$pval
+    pvali[j]     = tmp$pval
+    tstati[j]    = tmp$tstat
   }
   
-  out = list(dmsharpei = dmsharpei, pvali = pvali)
+  out = list(dmsharpei = dmsharpei, pvali = pvali, tstati = tstati)
   return(out)   
 }
 msharpeScreeningi = cmpfun(.msharpeScreeningi)

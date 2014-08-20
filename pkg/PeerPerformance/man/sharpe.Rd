@@ -6,12 +6,11 @@
 \description{%
   Function which computes the Sharpe ratio}
 \usage{%
-  sharpe(X, rf = 0, na.rm = TRUE)
+  sharpe(X, na.rm = TRUE)
 }
 \arguments{%
   \item{X}{vector (of lenght \eqn{T}) or matrix (of size \eqn{T \times N}{TxN}) of returns 
   for \eqn{N} funds. \code{NA} values are allowed.}
-  \item{rf}{scalar or vector (of lenght \eqn{N}) of risk-free rate. Default \code{rf = 0}.}
   \item{na.rm}{a logical value indicating whether \code{NA} values should be stripped before the computation. Default \code{na.rm = TRUE}}
 }
 \details{%

@@ -6,27 +6,31 @@
 # Given a value of lambda, this function returns the pi0, pi+ and pi- of the funds
 ####################################################################################
 
-.computePi = function(pval, dalpha, lambda = 0.5, nBoot = 500, bpos = 0.4, bneg = 0.6, adjust = TRUE){
+.computePi = function(pval, dalpha, tstat, lambda = 0.5, nBoot = 500, bpos = 0.4, bneg = 0.6, adjust = TRUE){
   if (!is.matrix(pval)){
     pval = matrix(pval, nrow = 1)
   }
   if (!is.matrix(dalpha)){
     dalpha = matrix(dalpha, nrow = 1)
   }
+  if (!is.matrix(tstat)){
+    tstat = matrix(tstat, nrow = 1)
+  }
   
   m = nrow(pval)
-  n1 = ncol(pval) # n + 1 funds
+  #n1 = ncol(pval) # n + 1 funds
   if (length(lambda) == 1){
     lambda = rep(lambda, m)
   }
   
   pizero = pipos = pineg = lambda_ = rep(NA, m)
   for (i in 1 : m){
-    pvali = pval[i,]
+    pvali   = pval[i,]
+    dalphai = dalpha[i,]
+    tstati  = tstat[i,]
     if (all(is.na(pvali))){
       next  
     }
-    dalphai = dalpha[i,]
     if (is.null(lambda)){
       lambdai = computeOptLambda(pval = pvali, nBoot = nBoot, adjust = adjust)
     }
@@ -45,18 +49,28 @@
     hn  = round(0.5 * n)
     piposi = pinegi = 0
     
-    idxOKnPizeroi = idxOK & pvali >= lambdai
+    #idxOKnPizeroi = idxOK & pvali >= lambdai
+    # we need to fix this
     qpos = qnorm(p = bpos)
     qneg = qnorm(p = bneg)
     
     if (sum(dalphai[idxOK] >= 0) >= hn){
-      piposi = (1 / n) * min((n - ni0), max(sum(dalphai[idxOK] >= qpos) - ni0 * (1 - bpos), 0))
+      piposi = (1 / n) * min((n - ni0), max(sum(tstati[idxOK] >= qpos) - ni0 * (1 - bpos), 0))
       pinegi = min(max(1 - pizeroi - piposi, 0), 1) # numerical stability
     }
     else{
-      pinegi = (1 / n) * min((n - ni0), max(sum(dalphai[idxOK] <= qneg) - ni0 * bneg, 0))
+      pinegi = (1 / n) * min((n - ni0), max(sum(tstati[idxOK] <= qneg) - ni0 * bneg, 0))
       piposi =  min(max(1 - pizeroi - pinegi, 0), 1) # numerical stability
     }
+    
+#     if (sum(dalphai[idxOK] >= 0) >= hn){
+#       piposi = (1 / n) * min((n - ni0), max(sum(dalphai[idxOK] >= qpos) - ni0 * (1 - bpos), 0))
+#       pinegi = min(max(1 - pizeroi - piposi, 0), 1) # numerical stability
+#     }
+#     else{
+#       pinegi = (1 / n) * min((n - ni0), max(sum(dalphai[idxOK] <= qneg) - ni0 * bneg, 0))
+#       piposi =  min(max(1 - pizeroi - pinegi, 0), 1) # numerical stability
+#     }
     
     pizero[i]  = pizeroi
     pipos[i]   = piposi

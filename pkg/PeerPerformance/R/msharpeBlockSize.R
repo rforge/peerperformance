@@ -30,7 +30,7 @@
   
   b.len = length(b.vec)
   emp.reject.probs = rep.int(0, b.len)
-  d = msharpe.ratio.diff(x, y, rf.x = 0, rf.y = 0, level, na.neg, ctr$ttype)
+  d = msharpe.ratio.diff(x, y, level, na.neg, ctr$ttype)
   T = length(x)
   Var.data = matrix(data = 0, nrow = T.start + T, ncol = 2)
   Var.data[1, ] = rets[1, ]
@@ -49,7 +49,7 @@
     Var.data.trunc = Var.data[(T.start + 1):(T.start + T),]
     for (j in 1 : b.len){
       bsids = bootIndices(T, M, b.vec[j])
-      tmp   = msharpeTestBootstrap(Var.data.trunc, rf.x = 0, rf.y = 0, level, na.neg, bsids, b.vec[j], ctr$ttype, pBoot = 1, d)
+      tmp   = msharpeTestBootstrap(Var.data.trunc, level, na.neg, bsids, b.vec[j], ctr$ttype, pBoot = 1, d)
       if (tmp$pval <= alpha){
         emp.reject.probs[j] = emp.reject.probs[j] + 1
       }
