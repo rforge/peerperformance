@@ -1,3 +1,6 @@
+Changes in Version 2.0.5 (DA)
+  o Fix in documentation for modified Sharpe testing
+
 Changes in Version 2.0.4 (DA)
   o Bug fix for alpha screening when NA are in the dataset
   o Risk-free rate removed

@@ -97,7 +97,7 @@
   
   ## Run Sharpe testing (circular bootstrap)
   set.seed(1234)
-  ctr = list(type = 2, nBoot = 250, bBoot = 5, hac = TRUE)
+  ctr = list(type = 2, nBoot = 250, bBoot = 5)
   out = sharpeTesting(x, y, control = ctr)
   print(out)
 }

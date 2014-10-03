@@ -92,25 +92,25 @@
   x = hfdata[,1]
   y = hfdata[,2]	
 
-  ## Run Sharpe testing (asymptotic)
+  ## Run modified Sharpe testing (asymptotic)
   ctr = list(type = 1)
   out = msharpeTesting(x, y, level = 0.95, control = ctr)
   print(out)
 
-  ## Run Sharpe testing (asymptotic hac)
+  ## Run modified Sharpe testing (asymptotic hac)
   ctr = list(type = 1, hac = TRUE)
   out = msharpeTesting(x, y, level = 0.95, control = ctr)
   print(out)
   
-  ## Run Sharpe testing (iid bootstrap)
+  ## Run modified Sharpe testing (iid bootstrap)
   set.seed(1234)
   ctr = list(type = 2, nBoot = 250)
   out = msharpeTesting(x, y, level = 0.95, control = ctr)
   print(out)
 
-  ## Run Sharpe testing (circular bootstrap)
+  ## Run modified Sharpe testing (circular bootstrap)
   set.seed(1234)
-  ctr = list(type = 2, nBoot = 250, bBoot = 5, hac = TRUE)
+  ctr = list(type = 2, nBoot = 250, bBoot = 5)
   out = msharpeTesting(x, y, level = 0.95, control = ctr)
   print(out)
 }
