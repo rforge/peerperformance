@@ -199,7 +199,7 @@ sharpeTestAsymptotic = cmpfun(.sharpeTestAsymptotic)
   }
   
   Psi.hat = compute.Psi.hat(V.hat, hac)
-  se = sqrt(crossprod(gradient, Psi.hat %*% gradient) / T)
+  se = as.numeric( sqrt(crossprod(gradient, Psi.hat %*% gradient) / T) )
   return(se)
   
 }
@@ -214,8 +214,9 @@ se.sharpe.asymptotic = cmpfun(.se.sharpe.asymptotic)
   T = nrow(rets)
   x = rets[,1,drop=FALSE]
   y = rets[,2,drop=FALSE]
-  dsharpe = sharpe.ratio.diff(x, y, ttype) - d
+  dsharpe = as.numeric( sharpe.ratio.diff(x, y, ttype) - d )
   se = se.sharpe.bootstrap(x, y, b, ttype)
+  #se = se.sharpe.asymptotic(X = cbind(x, y), hac = TRUE, ttype = ttype)
   
   # bootstrap indices
   nBoot = ncol(bsids)
@@ -229,7 +230,7 @@ se.sharpe.asymptotic = cmpfun(.se.sharpe.asymptotic)
   
   if (pBoot == 1){
     # first type p-value calculation
-    bststat = abs(bsdsharpe - abs(dsharpe)) / bsse
+    bststat = abs(bsdsharpe - dsharpe) / bsse
     pval    = sum(bststat > abs(tstat)) / (nBoot + 1)
   }
   else{

@@ -250,7 +250,7 @@ msharpeTestAsymptotic = cmpfun(.msharpeTestAsymptotic)
   V.hat[,c(3,7)] = sweep(x = X^3, MARGIN = 2, STATS = g3, FUN = "-")
   V.hat[,c(4,8)] = sweep(x = X^4, MARGIN = 2, STATS = g4, FUN = "-")
   Psi.hat = compute.Psi.hat(V.hat, hac)
-  se = sqrt(crossprod(gradient, Psi.hat %*% gradient) / T)
+  se = as.numeric( sqrt(crossprod(gradient, Psi.hat %*% gradient) / T) )
   return(se)
   
 }
@@ -266,12 +266,13 @@ se.msharpe.asymptotic = cmpfun(.se.msharpe.asymptotic)
   x = rets[,1,drop=FALSE]
   y = rets[,2,drop=FALSE]
   
-  dmsharpe = msharpe.ratio.diff(x, y, level, na.neg, ttype) - d 
+  dmsharpe = as.numeric( msharpe.ratio.diff(x, y, level, na.neg, ttype) - d )
   if (is.na(dmsharpe)){
     out = list(dmsharpe = NA, tstat = NA, se = NA, bststat = NA, pval = NA)
     return(out)
   }
   se = se.msharpe.bootstrap(x, y, level, b, ttype)
+  #se = se.msharpe.asymptotic(X = cbind(x, y), level = level, hac = TRUE, ttype = ttype)
   
   # bootstrap indices
   nBoot = ncol(bsids)
@@ -285,7 +286,7 @@ se.msharpe.asymptotic = cmpfun(.se.msharpe.asymptotic)
   
   if (pBoot == 1){
     # first type p-value calculation
-    bststat = abs(bsdmsharpe - abs(dmsharpe)) / bsse
+    bststat = abs(bsdmsharpe - dmsharpe) / bsse
     pval    = sum(bststat >= abs(tstat)) / (nBoot + 1)
   }
   else{
