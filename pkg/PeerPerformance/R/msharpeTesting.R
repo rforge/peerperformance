@@ -287,12 +287,14 @@ se.msharpe.asymptotic = cmpfun(.se.msharpe.asymptotic)
   if (pBoot == 1){
     # first type p-value calculation
     bststat = abs(bsdmsharpe - dmsharpe) / bsse
-    pval    = sum(bststat >= abs(tstat)) / (nBoot + 1)
+    pval    = (sum(bststat >= abs(tstat)) + 1) / (nBoot + 1)
+    #pval = sum(bststat >= abs(tstat)) / nBoot
   }
   else{
     # second type p-value calculation (as in Barras)
     bststat = (bsdmsharpe - dmsharpe) / bsse
     pval    = 2 * min(sum(bststat > tstat) + 1, sum(bststat < tstat) + 1) / (nBoot + 1)
+    #pval = 2 * min(sum(bststat > tstat), sum(bststat < tstat)) / nBoot
   }
  
   out = list(dmsharpe = dmsharpe, tstat = tstat, se = se, bststat = bststat, pval = pval)
