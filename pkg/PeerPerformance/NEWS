@@ -1,3 +1,7 @@
+Changes in version 2.0.6 and 2.0.7 (DA)
+  o Various improvements
+  o Small fix in documentation
+
 Changes in Version 2.0.5 (DA)
   o Fix in documentation for modified Sharpe testing
   o Small fix in pvalue computation by bootstrap (symmetric)

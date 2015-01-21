@@ -37,7 +37,7 @@ processControl = function(control){
     control$bBoot = 1
   }
   if (!("pBoot" %in% nam) || is.null(control$pBoot)){
-    control$pBoot = 2
+    control$pBoot = 1
   }
   if (!("nCore" %in% nam) || is.null(control$nCore)){
     control$nCore = 1
