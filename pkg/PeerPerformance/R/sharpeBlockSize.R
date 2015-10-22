@@ -60,4 +60,4 @@
   return(b.opt)
   
 }
-sharpeBlockSize = cmpfun(.sharpeBlockSize)
+sharpeBlockSize = compiler::cmpfun(.sharpeBlockSize)

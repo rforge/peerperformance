@@ -170,4 +170,4 @@ infoFund = cmpfun(.infoFund)
   }
   return(idsBoot)
 }
-bootIndices = cmpfun(.bootIndices)
+bootIndices = compiler::cmpfun(.bootIndices)

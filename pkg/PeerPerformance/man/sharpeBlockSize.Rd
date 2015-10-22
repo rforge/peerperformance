@@ -43,7 +43,11 @@
   David Ardia and Kris Boudt.
 }
 \references{%
-  Ardia, D., Boudt, K. (2014).
+   Ardia, D., Boudt, K. (2015).
+  Testing equality of modified Sharpe ratios
+  \emph{Finance Research Letters} \bold{13}, pp.97--104.
+
+  Ardia, D., Boudt, K. (2015).
   \emph{The Peer Performance of Hedge Funds}.
   \url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2000901}
 

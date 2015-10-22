@@ -2,7 +2,7 @@
 ## Set of R functions for modified Sharpe screening
 ####################################################################################
 
-msharpeScreening = function(X, level = 0.90, na.neg = TRUE, control = list()) {
+.msharpeScreening = function(X, level = 0.90, na.neg = TRUE, control = list()) {
   
   # process control
   ctr = processControl(control)
@@ -76,6 +76,7 @@ msharpeScreening = function(X, level = 0.90, na.neg = TRUE, control = list()) {
   
   return(out)
 }
+msharpeScreening = compiler::cmpfun(.msharpeScreening)
 
 ## Sharpe ratio screening for fund i again its peers
 .msharpeScreeningi = function(i, rdata, level, T, N, nBoot, bsids, minObs, na.neg, type, hac, b, ttype, pBoot) {
@@ -115,4 +116,4 @@ msharpeScreening = function(X, level = 0.90, na.neg = TRUE, control = list()) {
   out = list(dmsharpei = dmsharpei, pvali = pvali, tstati = tstati)
   return(out)   
 }
-msharpeScreeningi = cmpfun(.msharpeScreeningi)
+msharpeScreeningi = compiler::cmpfun(.msharpeScreeningi)

@@ -81,7 +81,7 @@
   out = list(pizero = pizero, pipos = pipos, pineg = pineg, lambda = lambda_)
   return(out)
 }
-computePi = cmpfun(.computePi)
+computePi = compiler::cmpfun(.computePi)
 
 ####################################################################################
 # Given a value of lambda, this function returns the pizero of the funds
@@ -103,7 +103,7 @@ computePi = cmpfun(.computePi)
   
   return(pizero)
 }
-computePizero = cmpfun(.computePizero)
+computePizero = compiler::cmpfun(.computePizero)
 
 ####################################################################################
 # Adjust estimated pi0 using quadratif fit
@@ -147,7 +147,7 @@ computePizero = cmpfun(.computePizero)
   }
   return(out)
 }
-adjustPi = cmpfun(.adjustPi)
+adjustPi = compiler::cmpfun(.adjustPi)
 
 ####################################################################################
 # Compute optimal lamba values 
@@ -196,7 +196,7 @@ adjustPi = cmpfun(.adjustPi)
   
   return(optlambda)
 }
-computeOptLambda = cmpfun(.computeOptLambda)
+computeOptLambda = compiler::cmpfun(.computeOptLambda)
 
 # .coefAdjustPi = function(n, lambda){
 #   ids = matrix(data = c(10,0.3,10,0.4,10,0.5,10,0.6,10,0.7,50,0.3,50,0.4,50,0.5,50,0.6,50,0.7,100,0.3,100,

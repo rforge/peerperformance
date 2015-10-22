@@ -23,6 +23,20 @@ citEntry(entry = "misc",
          year = "2014",
          url = "http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2000901",
 	 textVersion =
-         paste("David Ardia, Kris Boudt (2014).",
+         paste("David Ardia, Kris Boudt (2015).",
                "The Peer Performance of Hedge Funds.")
+)
+
+citEntry(entry = "article",
+	 title = "Testing equality of modified Sharpe ratios",
+	 author = personList(person("David","Ardia"),
+                             person("Kris","Boudt")),
+         year = "2015",
+         journal = "Finance Research Letters",
+         volume = "13",
+         pages  = "97-104",
+	 textVersion =
+         paste("David Ardia, Kris Boudt (2015).",
+               "Testing equality of modified Sharpe ratios.",
+               "Finance Research Letters 13.")
 )

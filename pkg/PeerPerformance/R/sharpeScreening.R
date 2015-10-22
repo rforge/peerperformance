@@ -2,7 +2,7 @@
 ## Set of R functions for Sharpe screening
 ####################################################################################
 
-sharpeScreening = function(X, control = list()) {
+.sharpeScreening = function(X, control = list()) {
   
   # process control
   ctr = processControl(control)
@@ -74,6 +74,7 @@ sharpeScreening = function(X, control = list()) {
   
   return(out)
 }
+sharpeScreening = compiler::cmpfun(.sharpeScreening)
 
 ## Sharpe ratio screening for fund i again its peers
 .sharpeScreeningi = function(i, rdata, T, N, nBoot, bsids, minObs, type, hac, b, ttype, pBoot) {
@@ -113,4 +114,4 @@ sharpeScreening = function(X, control = list()) {
   out = list(dsharpei = dsharpei, pvali = pvali, tstati = tstati)
   return(out)   
 }
-sharpeScreeningi = cmpfun(.sharpeScreeningi)
+sharpeScreeningi = compiler::cmpfun(.sharpeScreeningi)

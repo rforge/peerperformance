@@ -49,7 +49,7 @@
   return(out)
   
 }
-sharpeTesting = cmpfun(.sharpeTesting)
+sharpeTesting = compiler::cmpfun(.sharpeTesting)
 
 ####################################################################################
 ## Test Sharpe difference using asymptotic approach
@@ -82,7 +82,7 @@ sharpeTesting = cmpfun(.sharpeTesting)
   return(diff)
   
 }
-sharpe.ratio.diff = cmpfun(.sharpe.ratio.diff)
+sharpe.ratio.diff = compiler::cmpfun(.sharpe.ratio.diff)
 
 .sharpeTestAsymptotic = function(rets, hac, ttype){
   
@@ -94,7 +94,7 @@ sharpe.ratio.diff = cmpfun(.sharpe.ratio.diff)
   return(out)
   
 }
-sharpeTestAsymptotic = cmpfun(.sharpeTestAsymptotic)
+sharpeTestAsymptotic = compiler::cmpfun(.sharpeTestAsymptotic)
 
 ####################################################################################
 # Asymptotic standard error
@@ -203,7 +203,7 @@ sharpeTestAsymptotic = cmpfun(.sharpeTestAsymptotic)
   return(se)
   
 }
-se.sharpe.asymptotic = cmpfun(.se.sharpe.asymptotic)
+se.sharpe.asymptotic = compiler::cmpfun(.se.sharpe.asymptotic)
 
 ####################################################################################
 ## Test Sharpe difference using circular studentized boostrap of Ledoit and Wolf
@@ -244,7 +244,7 @@ se.sharpe.asymptotic = cmpfun(.se.sharpe.asymptotic)
   out = list(dsharpe = dsharpe, tstat = tstat, se = se, bststat = bststat, pval = pval)
   return(out)
 }
-sharpeTestBootstrap = cmpfun(.sharpeTestBootstrap)
+sharpeTestBootstrap = compiler::cmpfun(.sharpeTestBootstrap)
 
 ####################################################################################
 # Bootstrap standard error
@@ -345,4 +345,4 @@ sharpeTestBootstrap = cmpfun(.sharpeTestBootstrap)
   return(se)
   
 }
-se.sharpe.bootstrap = cmpfun(.se.sharpe.bootstrap)
+se.sharpe.bootstrap = compiler::cmpfun(.se.sharpe.bootstrap)

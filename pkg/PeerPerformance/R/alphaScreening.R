@@ -2,7 +2,7 @@
 ## Set of R function for alpha screening
 ####################################################################################
 
-alphaScreening = function(X, factors = NULL, control = list()) {  
+.alphaScreening = function(X, factors = NULL, control = list()) {  
   
   # process control
   ctr = processControl(control)
@@ -70,6 +70,7 @@ alphaScreening = function(X, factors = NULL, control = list()) {
   
   return(out)
 }
+alphaScreening = compiler::cmpfun(.alphaScreening)
 
 .alphaScreeningi = function(i, rdata, factors, T, N, hac){
   pvali = dalphai = tstati = rep(NA, N)
@@ -136,4 +137,4 @@ alphaScreening = function(X, factors = NULL, control = list()) {
   out = list(dalphai = dalphai, pvali = pvali, tstati = tstati)
   return(out)
 } 
-alphaScreeningi = cmpfun(.alphaScreeningi)
+alphaScreeningi = compiler::cmpfun(.alphaScreeningi)

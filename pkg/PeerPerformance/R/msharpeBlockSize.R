@@ -61,4 +61,4 @@
   return(b.opt)
   
 }
-msharpeBlockSize = cmpfun(.msharpeBlockSize)
+msharpeBlockSize = compiler::cmpfun(.msharpeBlockSize)
